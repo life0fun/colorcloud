@@ -4,8 +4,8 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
-  (:require [datomic.api :only [q db] :refer [q db] :as d]
-            [datomic-schema.schema :refer :all :as dschema])
+  (:require [datomic.api :only [q db] :refer [q db] :as d])
+  (:require [colorcloud.datomic.dbschema :as dbschema])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis])    ; bring in redis namespace
@@ -14,21 +14,24 @@
             [clj-time.coerce :refer [to-long from-long]]))
 
 
-; we are using datomic-schema to define schema.
-; to check whether a namespace or attribute exists in db, use
-; (q '[:find ?e :in $ ?attr :where [?e :db/ident ?attr]] (db conn) :parent/status)
-; (q '[:find ?e :in $ ?attr :where [?e :db/ident ?attr]] (db conn) :db.part/app)
-; (q '[:find ?attr :where [_ :db.install/attribute ?attr]] (d/db conn)) 
-; (:db/ident (d/entity (d/db conn) 78))  ; to print entity ident
-; or with npm install datomicism -g
-
-
-
 ;; store database uri
 (defonce uri "datomic:free://localhost:4334/colorcloud")
-
 ;; connect to database
 (def conn (d/connect uri))
+
+
+;
+; To add data to a new entity, build a transaction using :db/add implicitly 
+; with the map structure (or explicitly with the list structure), a temporary id, 
+; and the attributes and values being added.
+; {:db/id entity-id attribute value attribute value ... }
+; [:db/add entity-id attribute value]
+; [:db/add entity-id attribute value]
+; {:db/id #db/id[:db.part/user -1000452], :neighborhood/name "Beacon Hill", :neighborhood/district #db/id[:db.part/user -1000451]}
+;
+
+
+
 
 ;; parse schema dtm file
 ;(def schema-tx (read-string (slurp "./resource/schema/seattle-schema.dtm")))
@@ -36,35 +39,19 @@
 ;(def data-tx (read-string (slurp "./resource/schema/seattle-data0.dtm")))
 
 
-; app partition
-(defpart app)
-
-; parent namespace with all attributes
-(defschema parent
-  (part app)
-  (fields
-   [name :string :indexed]
-   [contact :string "phone-num"]
-   [email :string :indexed]
-   [status :enum [:pending :active :inactive :cancelled]]
-   [child :ref :many]))
-
-
-; children namespace with all attributes
-(defschema child
-  (part app)
-  (fields
-   [name :string :indexed]
-   [parent :ref :many]        ; ref to parent namespace
-   [contact :string :many]))  ; child's contact list
-
-
+; create attr schema thru conn
 (defn create-schema
-  "create schema using datomic-schema"
+  "create schema with connection to db"
   []
-  (d/transact conn (build-parts d/tempid))
-  (d/transact conn (build-schema d/tempid)))
+  (dbschema/create-schema conn))
 
+; list all install-ed attrs in db
+(defn list-attr
+  "list attibutes in db"
+  [attr]
+  (if-not attr
+    (dbschema/list-attr (db conn))
+    (dbschema/list-attr (db conn) attr)))
 
 (defn get-communties
   "get all communities"
@@ -78,6 +65,9 @@
   []
   (get-communties))
 
+
+(defin insert-person
+  "insert a person")
 
 ; ;; get first entity id in results and make an entity map
 ; (def id (ffirst results))

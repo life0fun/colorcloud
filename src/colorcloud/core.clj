@@ -15,12 +15,14 @@
 (def help-info (list " ---------------------------------"
                      "lein datomic start &"
                      "lein datomic initialize  # for running transactor"
-                     "lein run help"
+                     "lein run create-schema"
+                     "lein run list-schema"
                 ))
 
 (defn -main [& args]
   (case (first args)
     "help" (doall (map prn help-info))
     "query" (dda/query)
-    "schema" (dda/create-schema)
+    "create-schema" (dda/create-schema)
+    "list-schema" (dda/list-attr (second args))
     (doall (map prn help-info))))
