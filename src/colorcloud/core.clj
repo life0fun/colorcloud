@@ -25,4 +25,6 @@
     "query" (dda/query)
     "create-schema" (dda/create-schema)
     "list-schema" (dda/list-attr (second args))
+    "insert-data" (dda/insert-person "john" "doe")
+    "list-person" (dda/list-person)
     (doall (map prn help-info))))

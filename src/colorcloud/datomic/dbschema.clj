@@ -167,7 +167,7 @@
 (defn create-schema
   "create schema using datomic-schema in db connection"
   [dbconn]
-  (d/transact dbconn (build-parts d/tempid)) ;(d/tempid partition) gen tempid in specific partition
+  (d/transact dbconn (build-parts d/tempid)) ;(d/tempid :db.part/db) schema attribute with id from db part.
   (d/transact dbconn (build-schema d/tempid)))
 
 

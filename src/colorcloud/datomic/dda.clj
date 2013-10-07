@@ -14,23 +14,30 @@
             [clj-time.coerce :refer [to-long from-long]]))
 
 
-;; store database uri
-(defonce uri "datomic:free://localhost:4334/colorcloud")
-;; connect to database
-(def conn (d/connect uri))
-
-
 ;
 ; To add data to a new entity, build a transaction using :db/add implicitly 
 ; with the map structure (or explicitly with the list structure), a temporary id, 
 ; and the attributes and values being added.
+; #db/id[partition-name value*] : value is an optional negative number.
+; all instances of the same temp id are mapped to the same actual entity id in a given transaction, 
 ; {:db/id entity-id attribute value attribute value ... }
 ; [:db/add entity-id attribute value]
 ; [:db/add entity-id attribute value]
 ; {:db/id #db/id[:db.part/user -1000452], :neighborhood/name "Beacon Hill", :neighborhood/district #db/id[:db.part/user -1000451]}
 ;
+; In general, unique temporary ids are mapped to new entity ids.
+; when one of the attribute is :db/unique :db.unique/identity, system will map to existing entity if matches or make a new.
+; to add fact to existing entity, retrieve entity id the add using the entity id.
+; adding entity ref, must specify an entity id(could be tempid) as the attribute's value.
+; takes advantage of the fact that the same temporary id can be generated multiple times by 
+; specifying the same partition and negative number; and that all instances of a given temporary id 
+; within a transaction will resolve to a single entity id.
 
 
+;; store database uri
+(defonce uri "datomic:free://localhost:4334/colorcloud")
+;; connect to database
+(def conn (d/connect uri))
 
 
 ;; parse schema dtm file
@@ -65,9 +72,23 @@
   []
   (get-communties))
 
+(def data-tx "[
+  {:db/id #db/id[:db.part/user -1000001] :person/firstname \"john\"}
+  ]")
 
-(defin insert-person
-  "insert a person")
+(defn insert-person
+  "test to insert parent and child"
+  [pname cname]
+  (let [data-tx (read-string data-tx)]
+    @(d/transact conn data-tx)))
+
+(defn list-person
+  "query all persons"
+  []
+  (let [results (q '[:find ?e :where [?e :person/firstname]] (db conn))
+        id (ffirst results)
+        e (-> conn db (d/entity id))]
+    (prn (:person/firstname e))))
 
 ; ;; get first entity id in results and make an entity map
 ; (def id (ffirst results))
