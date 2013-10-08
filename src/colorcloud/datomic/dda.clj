@@ -85,10 +85,11 @@
 (defn list-person
   "query all persons"
   []
-  (let [results (q '[:find ?e :where [?e :person/firstname]] (db conn))
+  (let [results (q '[:find ?e ?n :where [?e :person/firstname ?n]] (db conn))
         id (ffirst results)
+        fname (second (first results))
         e (-> conn db (d/entity id))]
-    (prn (:person/firstname e))))
+    (prn fname e)))
 
 ; ;; get first entity id in results and make an entity map
 ; (def id (ffirst results))
