@@ -27,4 +27,5 @@
     "list-schema" (dda/list-attr (second args))
     "insert-data" (dda/insert-person "john" "doe")
     "list-person" (dda/list-person)
+    "insert-parent" (dda/insert-parent)
     (doall (map prn help-info))))

@@ -5,7 +5,8 @@
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
   (:require [datomic.api :only [q db] :refer [q db] :as d])
-  (:require [colorcloud.datomic.dbschema :as dbschema])
+  (:require [colorcloud.datomic.dbschema :as dbschema]
+            [colorcloud.datomic.dbdata :as dbdata])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis])    ; bring in redis namespace
@@ -90,6 +91,11 @@
         fname (second (first results))
         e (-> conn db (d/entity id))]
     (prn fname e)))
+
+(defn insert-parent
+  "insert a parent with sequential ids"
+  []
+  (dbdata/insert-parent))
 
 ; ;; get first entity id in results and make an entity map
 ; (def id (ffirst results))

@@ -49,30 +49,31 @@
 (defn person-attr
   "compose a map of for attributes of person"
   [id fname lname age addr gender email phone]
-  (str "{:db/id #db/id[:db.part/user -" id
-        " :person/firstname " fname
-        " :person/lastname " lname
-        " :person/age " age
-        " :person/addr " addr
-        " :person/gender " gender
-        " :person/email " email
-        " :person/phone " phone
-        " }")
+  let [m {:db/id #db/id[:db.part/user (- id)]
+          :person/firstname fname
+          :person/lastname lname
+          :person/age age
+          :person/addr addr
+          :person/gender gender
+          :person/email email
+          :person/phone phone }]
+    (prn m)
+    m)
 
 (defn parent-attr
   "compose a map of for attributes of parent"
   [id personid childid]
-  (str "{:db/id #db/id[:db.part/user -" id
-       " :parent/person #db/id[:id.part/user -" personid
-       " :parent/child #db/id[:id.part/user -" childid
+  (str "{:db/id #db/id[:db.part/user -" id "]"
+       " :parent/person #db/id[:id.part/user -" personid "]"
+       " :parent/child #db/id[:id.part/user -" childid "]"
        " }"))
 
 (defn child-attr
   "compose a map of for attributes of children"
   [id personid parentid]
-  (str "{:db/id #db/id[:db.part/user -" id
-       " :child/person #db/id[:id.part/user -" personid
-       " :child/parent #db/id[:id.part/user -" parentid
+  (str "{:db/id #db/id[:db.part/user -" id "]"
+       " :child/person #db/id[:id.part/user -" personid "]"
+       " :child/parent #db/id[:id.part/user -" parentid "]"
        " }"))
 
 
@@ -80,34 +81,36 @@
   "insert a parent with sequential name"
   []
   (let [pid (getPersonId)
-        pfname (str "P-fname-" id)
-        plname (str "P-lname-" id)
+        pfname (str "P-fname-" pid)
+        plname (str "P-lname-" pid)
         page (+ 30 (rand-int 20))
-        paddr (str "addr-" id)
+        paddr (str "addr-" pid)
         pgender (rand-nth ["M" "F"])
-        pemail (str "P-fname-lname-" id "@email.com")
-        pphone (str "500-000-" id)
+        pemail (str "P-fname-lname-" pid "@email.com")
+        pphone (str "x500-000-" pid)
         ppersonstr (person-attr pid pfname plname page paddr pgender pemail pphone)
-        
+
         cid (getPersonId)
-        cfname (str "C-fname-" id)
-        clname (str "C-lname-" id)
+        cfname (str "C-fname-" cid)
+        clname (str "C-lname-" cid)
         cage (+ 5 (rand-int 15))
-        caddr (str "addr-" id)
+        caddr (str "addr-" cid)
         cgender (rand-nth ["M" "F"])
-        cemail (str "C-fname-lname-" id "@email.com")
-        cphone (str "100-000-" id)
+        cemail (str "C-fname-lname-" cid "@email.com")
+        cphone (str "x100-000-" cid)
         cpersonstr (person-attr cid cfname clname cage caddr cgender cemail cphone)
 
         childid (getPersonId)
         parentid (getPersonId)
         childstr (child-attr childid cid parentid)
         parentstr (parent-attr parentid pid childid)
-        
+
         data-tx-str (str "[ " ppersonstr cpersonstr childstr parentstr " ]")
-        data-tx (read-string data-tx-str)
+        ;data-tx (read-string data-tx-str)
        ]
-    @(d/transact conn data-tx)))
+    ;@(d/transact conn data-tx)
+    (prn data-tx-str)
+    ))
 
 
 (defn list-parent
