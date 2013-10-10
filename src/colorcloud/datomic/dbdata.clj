@@ -46,36 +46,33 @@
 ; get the id for a person
 (defn getPersonId [] (let [n (swap! PersonId inc)] (str (+ 1000000 n))))
 
-(defn person-attr
-  "compose a map of for attributes of person"
-  [fname lname age addr gender email phone]
-  let [m {:db/id (d/tempid :db.part/user)
-          :person/firstname fname
-          :person/lastname lname
-          :person/age age
-          :person/addr addr
-          :person/gender gender
-          :person/email email
-          :person/phone phone }]
-    (prn m)
-    m)
 
 (defn parent-attr
   "compose a map of for attributes of parent"
-  [personid childid]
+  [fname lname age addr gender email phone]
   (let [m {:db/id (d/tempid :db.part/user)
-          :parent/person personid
-          :parent/child childid}]
+          :parent/fname fname
+          :parent/lname lname
+          :parent/age age
+          :parent/addr addr
+          :parent/gender gender
+          :parent/email email
+          :parent/phone phone}]
     (prn m)
     m))
 
 
 (defn child-attr
   "compose a map of for attributes of children"
-  [personid parentid]
+  [fname lname age addr gender email phone]
   (let [m {:db/id (d/tempid :db.part/user)
-          :child/person personid
-          :child/parent parentid}]
+          :child/fname fname
+          :child/lname lname
+          :child/age age
+          :child/addr addr
+          :child/gender gender
+          :child/email email
+          :child/phone phone}]
     (prn m)
     m))
 
@@ -91,7 +88,7 @@
         pgender (rand-nth [:M :F])
         pemail (str "P-fname-lname-" pid "@email.com")
         pphone (str "500-000-" pid)
-        pperson (person-attr pfname plname page paddr pgender pemail pphone)
+        baseparent (parent-attr pfname plname page paddr pgender pemail pphone)
 
         cid (getPersonId)
         cfname (str "C-fname-" cid)
@@ -101,18 +98,14 @@
         cgender (rand-nth [:M :F])
         cemail (str "C-fname-lname-" cid "@email.com")
         cphone (str "100-000-" cid)
-        cperson (person-attr cfname clname cage caddr cgender cemail cphone)
+        basechild (child-attr cfname clname cage caddr cgender cemail cphone)
 
-        childid (getPersonId)
-        parentid (getPersonId)
-        childstr (child-attr childid cid parentid)
-        parentstr (parent-attr parentid pid childid)
-
-        data-tx-str (str "[ " ppersonstr cpersonstr childstr parentstr " ]")
-        ;data-tx (read-string data-tx-str)
+        parent (assoc baseparent :parent/child basechild)
+        child (assoc basechild :child/parent parent)
        ]
     ;@(d/transact conn data-tx)
-    (prn data-tx-str)
+    (prn child)
+    (prn parent)
     ))
 
 

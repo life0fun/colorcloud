@@ -44,12 +44,12 @@
 ; app partition
 (defpart app)
 
-; parent namespace with all attributes
-(defschema person
+
+(defschema parent
   (part app)
   (fields
-    [firstname :string :indexed :fulltext]
-    [lastname :string :indexed :fulltext]
+    [fname :string :indexed :fulltext]
+    [lname :string :indexed :fulltext]
     [age :long]
     [address :string :fulltext]
     [gender :string "use M and F repr gender string"]
@@ -57,24 +57,28 @@
     [phone :string :many :indexed :fulltext]
     [contact :ref :many "contact list of the peroson"]
     [location :ref :many "location list of a person, most recent"]
-    [likes :long "persons popularity"]
-    [status :enum [:pending :active :inactive :cancelled]]))
-
-
-(defschema parent
-  (part app)
-  (fields
-    [person :ref :one "basic human info"]   ; one identity for one parent
+    [upvotes :long "persons popularity"]
+    [status :enum [:pending :active :inactive :cancelled]]
     [child :ref :many "a list of parent's children"]
     [assignemnt :ref :many "all assignments parents assigned to kids"]
-    [friends :ref :many "a list of friends of parents"]))  ; the friends of parents
-
+    [friends :ref :many "a list of friends of parents"]  ; the friends of parents
+    [comments :ref :many "can we comment child's performance ?"]))
 
 ; children namespace with all attributes
 (defschema child
   (part app)
   (fields
-    [person :ref :one "basic human info"]  ; one identity for one child
+    [fname :string :indexed :fulltext]
+    [lname :string :indexed :fulltext]
+    [age :long]
+    [address :string :fulltext]
+    [gender :string "use M and F repr gender string"]
+    [email :string :many :indexed :fulltext]
+    [phone :string :many :indexed :fulltext]
+    [contact :ref :many "contact list of the peroson"]
+    [location :ref :many "location list of a person, most recent"]
+    [upvotes :long "persons popularity"]
+    [status :enum [:pending :active :inactive :cancelled]]
     [parent :ref :many "a list of kids parents"] ;
     [friends :ref :many "a list of kids friends"]
     [classmates :ref :many "classmate of the kid"]
@@ -82,7 +86,6 @@
     [activity :ref :many "kids digital activities, calls, sms, app usages, etc"]
     [assignment :ref :many "list of assignments to child"]
     [comments :ref :many "can we comment child's performance ?"]))
-
 
 ; so questions or github project or online streaming courses
 (defschema homework
