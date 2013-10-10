@@ -48,8 +48,8 @@
 
 (defn person-attr
   "compose a map of for attributes of person"
-  [id fname lname age addr gender email phone]
-  let [m {:db/id #db/id[:db.part/user (- id)]
+  [fname lname age addr gender email phone]
+  let [m {:db/id (d/tempid :db.part/user)
           :person/firstname fname
           :person/lastname lname
           :person/age age
@@ -62,19 +62,22 @@
 
 (defn parent-attr
   "compose a map of for attributes of parent"
-  [id personid childid]
-  (str "{:db/id #db/id[:db.part/user -" id "]"
-       " :parent/person #db/id[:id.part/user -" personid "]"
-       " :parent/child #db/id[:id.part/user -" childid "]"
-       " }"))
+  [personid childid]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :parent/person personid
+          :parent/child childid}]
+    (prn m)
+    m))
+
 
 (defn child-attr
   "compose a map of for attributes of children"
-  [id personid parentid]
-  (str "{:db/id #db/id[:db.part/user -" id "]"
-       " :child/person #db/id[:id.part/user -" personid "]"
-       " :child/parent #db/id[:id.part/user -" parentid "]"
-       " }"))
+  [personid parentid]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :child/person personid
+          :child/parent parentid}]
+    (prn m)
+    m))
 
 
 (defn insert-parent
@@ -85,20 +88,20 @@
         plname (str "P-lname-" pid)
         page (+ 30 (rand-int 20))
         paddr (str "addr-" pid)
-        pgender (rand-nth ["M" "F"])
+        pgender (rand-nth [:M :F])
         pemail (str "P-fname-lname-" pid "@email.com")
-        pphone (str "x500-000-" pid)
-        ppersonstr (person-attr pid pfname plname page paddr pgender pemail pphone)
+        pphone (str "500-000-" pid)
+        pperson (person-attr pfname plname page paddr pgender pemail pphone)
 
         cid (getPersonId)
         cfname (str "C-fname-" cid)
         clname (str "C-lname-" cid)
         cage (+ 5 (rand-int 15))
         caddr (str "addr-" cid)
-        cgender (rand-nth ["M" "F"])
+        cgender (rand-nth [:M :F])
         cemail (str "C-fname-lname-" cid "@email.com")
-        cphone (str "x100-000-" cid)
-        cpersonstr (person-attr cid cfname clname cage caddr cgender cemail cphone)
+        cphone (str "100-000-" cid)
+        cperson (person-attr cfname clname cage caddr cgender cemail cphone)
 
         childid (getPersonId)
         parentid (getPersonId)
