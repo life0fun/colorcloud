@@ -35,6 +35,12 @@
 ; within a transaction will resolve to a single entity id.
 
 
+; the value for ref type attribute is refed entity id, not the refed entity refernece.
+; When a transaction adds an attribute of reference type to an entity, it must specify 
+; an entity id as the attribute's value. entity id can be temp id, or real id.
+; for many ref, you can specify a list of entity id.
+;
+
 ;; store database uri
 (defonce uri "datomic:free://localhost:4334/colorcloud")
 ;; connect to database
@@ -54,7 +60,7 @@
           :parent/fname fname
           :parent/lname lname
           :parent/age age
-          :parent/addr addr
+          :parent/address addr
           :parent/gender gender
           :parent/email email
           :parent/phone phone}]
@@ -69,7 +75,7 @@
           :child/fname fname
           :child/lname lname
           :child/age age
-          :child/addr addr
+          :child/address addr
           :child/gender gender
           :child/email email
           :child/phone phone}]
@@ -100,12 +106,25 @@
         cphone (str "100-000-" cid)
         basechild (child-attr cfname clname cage caddr cgender cemail cphone)
 
-        parent (assoc baseparent :parent/child basechild)
-        child (assoc basechild :child/parent parent)
+        lcid (getPersonId)
+        lcfname (str "C-fname-" cid)
+        lclname (str "C-lname-" cid)
+        lcage (+ 5 (rand-int 15))
+        lcaddr (str "addr-" cid)
+        lcgender (rand-nth [:M :F])
+        lcemail (str "C-fname-lname-" cid "@email.com")
+        lcphone (str "100-000-" cid)
+        lbasechild (child-attr lcfname lclname lcage lcaddr lcgender lcemail lcphone)
+
+        ; the value for entity ref is entity id, not the real object reference. 
+        parent (assoc baseparent :parent/child [(:db/id basechild) (:db/id lbasechild)])
+        child (assoc basechild :child/parent (:db/id baseparent))
+        lchild (assoc lbasechild :child/parent (:db/id baseparent))
        ]
-    ;@(d/transact conn data-tx)
-    (prn child)
     (prn parent)
+    (prn child)
+    (prn lchild)
+    (d/transact conn [parent child lchild])
     ))
 
 
