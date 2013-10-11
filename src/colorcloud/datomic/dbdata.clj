@@ -128,11 +128,4 @@
     ))
 
 
-(defn list-parent
-  "query all parent"
-  []
-  (let [results (q '[:find ?e ?p :where [?e :parent/person ?p]] (db conn))
-        id (ffirst results)
-        fname (second (first results))
-        e (-> conn db (d/entity id))]
-    (prn fname e)))
+

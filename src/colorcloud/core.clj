@@ -26,6 +26,6 @@
     "create-schema" (dda/create-schema)
     "list-schema" (dda/list-attr (second args))
     "insert-data" (dda/insert-person "john" "doe")
-    "list-person" (dda/list-person)
+    "list-parent" (dda/list-parent)
     "insert-parent" (dda/insert-parent)
     (doall (map prn help-info))))

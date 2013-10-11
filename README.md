@@ -27,6 +27,7 @@ You can use repl to verify database is initialized properly. Note datomic db sch
   user=> (def results (q '[:find ?c :where [?c :community/name]] (db conn)))
   user=> results
   user=> (d/delete-database uri)
+  user=> (d/create-database uri)
 
 ## Entity model
 
