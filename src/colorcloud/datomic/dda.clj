@@ -34,6 +34,10 @@
 ; specifying the same partition and negative number; and that all instances of a given temporary id 
 ; within a transaction will resolve to a single entity id.
 
+;
+; (def e (d/entity (db conn) attr-id) gets all entity with ids
+; (keys e) or (:parent/child (d/entity (db conn) 17592186045703))
+;
 
 ;; store database uri
 (defonce uri "datomic:free://localhost:4334/colorcloud")
@@ -89,16 +93,18 @@
   []
   (dbdata/insert-parent))
 
-(defn list-parent
-  "query all parent"
-  []
-  (let [results (q '[:find ?pfname ?lfname 
-                     :where [?e :parent/fname ?pfname] 
-                            [?e :parent/child ?c]
-                            [?c :child/fname ?lfname]] (db conn))
-        ;id (ffirst results)
-        ;fname (second (first results))
-        ;e (-> conn db (d/entity id))
-        ]
-    (prn results)))
+(defn parent-child-names
+  "print parent and children names"
+  [ [pid cid] ]
+  (let [pe (d/entity (db conn) pid)
+        ce (d/entity (db conn) cid)
+        pfname (:parent/fname pe)
+        cfname (:child/fname ce)]
+    [pfname cfname]))
 
+(defn list-parent
+  "query all parents with all children"
+  []
+  (let [pc (q '[:find ?p ?c :where [?p :parent/child ?c]] (db conn))]
+        ;(map prn pc)))
+        (map parent-child-names pc)))
