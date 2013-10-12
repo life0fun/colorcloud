@@ -28,4 +28,5 @@
     "insert-data" (dda/insert-person "john" "doe")
     "list-parent" (dda/list-parent)
     "insert-parent" (dda/insert-parent)
+    "insert-child" (dda/insert-child (read-string (last args)))
     (doall (map prn help-info))))

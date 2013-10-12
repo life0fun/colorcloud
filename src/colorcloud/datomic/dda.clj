@@ -100,7 +100,7 @@
         ce (d/entity (db conn) cid)
         pfname (:parent/fname pe)
         cfname (:child/fname ce)]
-    [pfname cfname]))
+    [pid pfname cid cfname]))
 
 (defn list-parent
   "query all parents with all children"
@@ -108,3 +108,16 @@
   (let [pc (q '[:find ?p ?c :where [?p :parent/child ?c]] (db conn))]
         ;(map prn pc)))
         (map parent-child-names pc)))
+
+
+; insert child to parent by parent id, get parent by list-parent, pid
+(defn insert-child
+  "insert a children to parent by parent id, pid must be num, not string"
+  [pid]
+  (let [pe (d/entity (db conn) pid)
+        ch (:parent/child pe)
+        newch (dbdata/create-child)]
+    (d/transact conn )
+    (prn pid pe ch newch)))
+
+

@@ -128,4 +128,17 @@
     ))
 
 
-
+; create a child entity 
+(defn create-child
+  "create a child entity, id is random"
+  []
+  (let [cid (getPersonId)
+        cfname (str "C-fname-" cid)
+        clname (str "C-lname-" cid)
+        cage (+ 5 (rand-int 15))
+        caddr (str "addr-" cid)
+        cgender (rand-nth [:M :F])
+        cemail (str "C-fname-lname-" cid "@email.com")
+        cphone (str "100-000-" cid)
+        child (child-attr cfname clname cage caddr cgender cemail cphone)]
+    child))
