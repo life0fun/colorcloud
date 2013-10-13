@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
-  (:require [datomic.api :only [q db] :refer [q db] :as d])
+  (:require [datomic.api :as d])
   (:require [colorcloud.datomic.dbschema :as dbschema])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
@@ -107,13 +107,13 @@
         basechild (child-attr cfname clname cage caddr cgender cemail cphone)
 
         lcid (getPersonId)
-        lcfname (str "C-fname-" cid)
-        lclname (str "C-lname-" cid)
+        lcfname (str "C-fname-" lcid)
+        lclname (str "C-lname-" lcid)
         lcage (+ 5 (rand-int 15))
-        lcaddr (str "addr-" cid)
+        lcaddr (str "addr-" lcid)
         lcgender (rand-nth [:M :F])
-        lcemail (str "C-fname-lname-" cid "@email.com")
-        lcphone (str "100-000-" cid)
+        lcemail (str "C-fname-lname-" lcid "@email.com")
+        lcphone (str "100-000-" lcid)
         lbasechild (child-attr lcfname lclname lcage lcaddr lcgender lcemail lcphone)
 
         ; the value for entity ref is entity id, not the real object reference. 

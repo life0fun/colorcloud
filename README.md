@@ -21,13 +21,18 @@ To create a connection string, simply replace DB-NAME with your db name.
 You can use repl to verify database is initialized properly. Note datomic db schema, config and db-uri are defined inside project.clj.
 
   lein repl
-  user=> (use '[datomic.api :only [q db] :as d])
+  ;;user=> (use '[datomic.api :only [q db] :as d])
+  user=> (require '[datomic.api :as d])
   user=> (def uri "datomic:free://localhost:4334/colorcloud")
   user=> (def conn (d/connect uri))
-  user=> (def results (q '[:find ?c :where [?c :community/name]] (db conn)))
+  user=> (def db (d/db conn))
+
+  user=> (def results (q '[:find ?c :where [?c :community/name]] db))
   user=> results
   user=> (d/delete-database uri)
   user=> (d/create-database uri)
+
+  user=> (d/q '[:find ?atn :where [?ref ?attr] [?attr :db/ident ?atn]] db)
 
 ## Entity model
 

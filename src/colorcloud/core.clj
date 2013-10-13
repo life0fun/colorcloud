@@ -1,7 +1,7 @@
 (ns colorcloud.core
   (:require [clojure.string :as str]
             [clojure.pprint :refer :all])
-  (:require [datomic.api :as d :refer [db q]])
+  ;(:require [datomic.api :as d :refer [db q]])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis]) ; bring in redis namespace
@@ -29,4 +29,6 @@
     "list-parent" (dda/list-parent)
     "insert-parent" (dda/insert-parent)
     "insert-child" (dda/insert-child (read-string (last args)))
+    "find-parent" (dda/find-parent (second args) (last args))
+    "find-person-by-name" (dda/find-person-by-name (second args))
     (doall (map prn help-info))))

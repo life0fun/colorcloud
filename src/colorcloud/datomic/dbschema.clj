@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
-  (:require [datomic.api :only [q db] :refer [q db] :as d]
+  (:require [datomic.api :as d]
             [datomic-schema.schema :refer :all :as dschema]))
 
 ;
@@ -23,6 +23,9 @@
 ;   :db/fulltext
 ;   :db/noHistory - default we store store all past value.
 ;
+; schema query
+;  (d/q '[:find ?atn :where [?ref ?attr] [?attr :db/ident ?atn]] db)
+;  (d/q '[:find ?atn :where [?ref :parent/fname] [?ref ?attr] [?attr :db/ident ?atn]] db)
 ;
 ; all defined attributes in :db.install/attribute, query by ident, list all.
 ; (q '[:find ?e :in $ ?attr :where [?e :db/ident ?attr]] (db conn) :parent/status)
@@ -177,11 +180,11 @@
 (defn list-attr
   "list all attributes for ident, if no ident, list all"
   ([db]  ; db is (d/db conn)
-    (let [eid (q '[:find ?attr :where [_ :db.install/attribute ?attr]] db)]
+    (let [eid (d/q '[:find ?attr :where [_ :db.install/attribute ?attr]] db)]
       (prn "list all attr " eid)
       (map (partial entity-attr db) eid)))
   ([db ident]
-    (let [eid (q '[:find ?e :in $ ?attr :where [?e :db/ident ?attr]] db ident)]
+    (let [eid (d/q '[:find ?e :in $ ?attr :where [?e :db/ident ?attr]] db ident)]
       (map (partial entity-attr db) eid))))
 
 
