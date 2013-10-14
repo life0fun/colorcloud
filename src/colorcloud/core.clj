@@ -1,7 +1,6 @@
 (ns colorcloud.core
   (:require [clojure.string :as str]
             [clojure.pprint :refer :all])
-  ;(:require [datomic.api :as d :refer [db q]])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis]) ; bring in redis namespace

@@ -4,7 +4,6 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
-  ;(:require [datomic.api :only [q db] :refer [q db] :as d])
   (:require [datomic.api :as d])
   (:require [colorcloud.datomic.dbschema :as dbschema]
             [colorcloud.datomic.dbdata :as dbdata])
@@ -15,7 +14,7 @@
             [clj-time.format :refer [parse unparse formatter]]
             [clj-time.coerce :refer [to-long from-long]]))
 
-
+;
 ; http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 ; query API results as a list of facts as list of tuples. [ [tuple1...] [tuple2...]]
 ; the intermediate value for joining are :db/id, can be in both [entity attr val] pos
@@ -34,8 +33,7 @@
 ;   [[northern ?c] (region ?c :region/n)]
 ; Within the same rule, multiple tuples are AND.
 ;
-
-
+;
 ; all the :ref :many attribute stores clojure.lang.MapEntry. use :db/id to get the id.
 ; knowing entity id, query with (d/entity db eid). otherwise, [:find $t :where []]
 ; (d/entity db eid) rets the entity. entity is LAZY. attr only availabe when touch.
@@ -48,7 +46,7 @@
 ; {:db/id entity-id attribute value attribute value ... }
 ; [:db/add entity-id attribute value]
 ; (d/transact conn [newch [:db/add pid :parent/child (:db/id newch)]]
-
+;
 ;
 ; In general, unique temporary ids are mapped to new entity ids.
 ; within the same transaction, the same tempid maps to the same real entity id.
@@ -58,10 +56,13 @@
 ; takes advantage of the fact that the same temporary id can be generated multiple times by 
 ; specifying the same partition and negative number; and that all instances of a given temporary id 
 ; within a transaction will resolve to a single entity id.
-
 ;
 ; (def e (d/entity (db conn) attr-id) gets all entity with ids
 ; (keys e) or (:parent/child (d/entity (db conn) 17592186045703))
+; 
+; entity-id can be used at both side of the datom, e.g., give a parent entity id,
+;   (d/q '[:find ?e :in $ ?attr :where [17592186045703 ?attr ?e]] db :parent/child)
+;   (d/q '[:find ?e :in $ ?attr :where [?e ?attr 17592186045703]] db :child/parent)
 ;
 
 ; outbound query and inbound query
@@ -81,6 +82,8 @@
 ;
 ; (d/q '[:find ?e :in $ ?x :where [?e :child/parent ?x]] db (:db/id p))
 
+;
+;
 
 ;; store database uri
 (defonce uri "datomic:free://localhost:4334/colorcloud")
