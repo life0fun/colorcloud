@@ -23,7 +23,7 @@
 ;   :db/fulltext
 ;   :db/noHistory - default we store store all past value.
 ;
-; schema query
+; attr can also be refed by var in query. [[?e ?attr] [?attr :id/ident ?attr-name]]
 ;  (d/q '[:find ?atn :where [?ref ?attr] [?attr :db/ident ?atn]] db)
 ;  (d/q '[:find ?atn :where [?ref :parent/fname] [?ref ?attr] [?attr :db/ident ?atn]] db)
 ;
@@ -39,6 +39,8 @@
 ; mapped to the same entity id. 
 ;   {:db/id #db/id[:db.part/user -1000460], :district/name "Greater Duwamish"}
 ;
+; all the :ref :many attribute stores clojure.lang.MapEntry. use :db/id to get the id.
+; 
 ; how can we do compound unique key ?
 ; :db/unique implies :db/index. 
 ; :db.unique/value - attempts to insert a duplicate value for a different entity id will fail
@@ -65,7 +67,7 @@
     [child :ref :many "a list of parent's children"]
     [assignemnt :ref :many "all assignments parents assigned to kids"]
     [friends :ref :many "a list of friends of parents"]  ; the friends of parents
-    [comments :ref :many "can we comment child's performance ?"]))
+    [comments :ref :many "can not personal attack on parent"]))
 
 ; children namespace with all attributes
 (defschema child
@@ -75,7 +77,7 @@
     [lname :string :indexed :fulltext]
     [age :long]
     [address :string :fulltext]
-    [gender :keyword "use M and F repr gender string"]
+    [gender :keyword "use :M and :F repr gender string"]
     [email :string :many :indexed :fulltext]
     [phone :string :many :indexed :fulltext]
     [contact :ref :many "contact list of the peroson"]
@@ -88,7 +90,7 @@
     [grade :enum [:first :second :third :fourth :fifth :sixth :seventh :freshman :junior :senior]]
     [activity :ref :many "kids digital activities, calls, sms, app usages, etc"]
     [assignment :ref :many "list of assignments to child"]
-    [comments :ref :many "can we comment child's performance ?"]))
+    [comments :ref :many "can we comment child's performance by authorities ?"]))
 
 ; so questions or github project or online streaming courses
 (defschema homework

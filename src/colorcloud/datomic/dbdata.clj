@@ -46,11 +46,11 @@
 ;; connect to database
 (def conn (d/connect uri))
 
-; the global id for gen 
-(def PersonId (atom 0))
+; the global id, gened from unix epoch in milliseconds
+(def PersonId (atom (to-long (clj-time/now))))
 
 ; get the id for a person
-(defn getPersonId [] (let [n (swap! PersonId inc)] (str (+ 1000000 n))))
+(defn getPersonId [] (let [n (swap! PersonId inc)] (str n)))
 
 
 (defn parent-attr
@@ -83,8 +83,9 @@
     m))
 
 
-(defn insert-parent
-  "insert a parent with sequential name"
+; create a parent entity, does not link child yet
+(defn create-parent
+  "create a parent entity, id is random"
   []
   (let [pid (getPersonId)
         pfname (str "P-fname-" pid)
@@ -94,41 +95,11 @@
         pgender (rand-nth [:M :F])
         pemail (str "P-fname-lname-" pid "@email.com")
         pphone (str "500-000-" pid)
-        baseparent (parent-attr pfname plname page paddr pgender pemail pphone)
-
-        cid (getPersonId)
-        cfname (str "C-fname-" cid)
-        clname (str "C-lname-" cid)
-        cage (+ 5 (rand-int 15))
-        caddr (str "addr-" cid)
-        cgender (rand-nth [:M :F])
-        cemail (str "C-fname-lname-" cid "@email.com")
-        cphone (str "100-000-" cid)
-        basechild (child-attr cfname clname cage caddr cgender cemail cphone)
-
-        lcid (getPersonId)
-        lcfname (str "C-fname-" lcid)
-        lclname (str "C-lname-" lcid)
-        lcage (+ 5 (rand-int 15))
-        lcaddr (str "addr-" lcid)
-        lcgender (rand-nth [:M :F])
-        lcemail (str "C-fname-lname-" lcid "@email.com")
-        lcphone (str "100-000-" lcid)
-        lbasechild (child-attr lcfname lclname lcage lcaddr lcgender lcemail lcphone)
-
-        ; the value for entity ref is entity id, not the real object reference. 
-        parent (assoc baseparent :parent/child [(:db/id basechild) (:db/id lbasechild)])
-        child (assoc basechild :child/parent (:db/id baseparent))
-        lchild (assoc lbasechild :child/parent (:db/id baseparent))
-       ]
-    (prn parent)
-    (prn child)
-    (prn lchild)
-    (d/transact conn [parent child lchild])
-    ))
+        parent (parent-attr pfname plname page paddr pgender pemail pphone)]
+    parent))
 
 
-; create a child entity 
+; create a child entity, does not link parent yet
 (defn create-child
   "create a child entity, id is random"
   []
