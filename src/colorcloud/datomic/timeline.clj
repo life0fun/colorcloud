@@ -24,6 +24,9 @@
 ;   3. the clock time, :db/txInstant of the transaction
 ; the optional 4th args is ?tx, which give you back the transaction entity for the datom.
 ;
+; transaction entity has [txid #inst "2013-10-"], attached as timestamp to each attr change.
+; can not reverse lookup of what entities this transaction involves.
+;
 ; to find the timestamp of an attribute value, find the transaction that create it.
 ; (def txid (->> (d/q '[:find ?tx :in $ ?e :where [?e :parent/child _ ?tx]] db id) ffirst))
 ;
@@ -48,6 +51,17 @@
 (def db (d/db conn))
 
 
+; list all transaction
+(defn all-transactions
+  "list all transactions "
+  [since]
+  (let [alltxs (reverse (sort 
+              (d/q '[:find ?e ?when 
+                     :where [?e :db/txInstant ?when]] db)))]
+    (prn alltxs)
+    alltxs))
+
+
 ; find the timeline of an attribute of 
 (defn timeline
   "list a timeline of an attribute of the entity"
@@ -58,7 +72,19 @@
                            :where [?e ?attr ?v ?tx ?op]]
                       hist 
                       eid 
-                      :parent/fname)
-                    (sort-by first))
+                      attr)
+                  (sort-by first))  ; sort by tx time
         ]
-    (prn txhist)))
+    (prn txhist)
+    txhist))
+
+
+; list all transaction of a person
+(defn person-timeline
+  "list a person's all activities with a time range"
+  [pid]
+  (let [attrs [:parent/child :child/parent :homework/author :course/author
+               :assignment/by :assignment/to :comments/autho
+               :answer/child :comments/author :activities/child]
+        all (clojure.set/union (map #(timeline pid %) attrs))]
+    (prn all)))

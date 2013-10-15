@@ -29,4 +29,6 @@
     "insert-child" (dda/insert-child (read-string (last args)))
     "find-parent" (dda/find-parent (second args) (last args))
     "find-by-name" (dda/find-by-name (second args))
+    "timeline" (dda/timeline (read-string (second args)) (last args))
+    "person-timeline" (dda/person-timeline (read-string (second args)))
     (doall (map prn help-info))))

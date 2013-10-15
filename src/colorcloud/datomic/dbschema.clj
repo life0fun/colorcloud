@@ -65,7 +65,7 @@
     [upvotes :long "persons popularity"]
     [status :enum [:pending :active :inactive :cancelled]]
     [child :ref :many "a list of parent's children"]
-    [assignemnt :ref :many "all assignments parents assigned to kids"]
+    [assignment :ref :many "all assignments parents assigned to kids"]
     [friends :ref :many "a list of friends of parents"]  ; the friends of parents
     [comments :ref :many "can not personal attack on parent"]))
 
@@ -80,7 +80,7 @@
     [gender :keyword "use :M and :F repr gender string"]
     [email :string :many :indexed :fulltext]
     [phone :string :many :indexed :fulltext]
-    [contact :ref :many "contact list of the peroson"]
+    [contact :ref :many "list of contact of the peroson"]
     [location :ref :many "location list of a person, most recent"]
     [upvotes :long "persons popularity"]
     [status :enum [:pending :active :inactive :cancelled]]
@@ -130,13 +130,12 @@
     [homework :ref :one "one assignment to one child at a time. batch assignment later"]
     [course :ref :one "one assignment to one child to take the course"]
     [type :enum [:homework :course] "solve a homework or take a course"]
-    [byparent :ref :one "assignment created by one parent"]
-    [bychild :ref :one "assignment can also be created by child, for extension"]
-    [tochild :ref :many "make one assignment to one child, or many children ?"]
+    [from :ref :one "assignment created from who"]
+    [to :ref :many "make one assignment to one child, or many children ?"]
     [status :enum [:pending :active :overdue :cancelled] "status of assignment"]
     [hint :string :many "hints to the assignment"]
     [related :ref :many "similar or related assignment"]
-    [wathcer :ref :many "watchers of the assignment"]
+    [watcher :ref :many "watchers of the assignment"]
     [answer :ref :many "a list of answers to the assignment"]
     [comments :ref :many "the comments tree for the answer"]
     [start :instant "starting time of the assignment"]
@@ -158,8 +157,23 @@
   (fields
     [author :ref :one "the author of the comments"]
     [body :string :fulltext "the body of a comment"]
+    [comments :ref :one "which comments this comment is to"]
     [subject :ref :one "the subject comments made to, ref to any entity"]
     [upvotes :long "how many upvotes"]))
+
+
+; activities, use since db to query
+(defschema activities
+  (part app)
+  (fields
+    [child :ref :indexed :one "which child created the activity"]
+    [name :string :one "activity name"]
+    [type :enum [:call :sms :mms :app :url :download :lock]]
+    [url :string :many "the url downloaded"]
+    [appname :string :one "the app name"]
+    [message :string :many "message content"]
+    [start :long "start time of activity"]
+    [end :long "end time of activity"]))
 
 
 (defn entity-attr

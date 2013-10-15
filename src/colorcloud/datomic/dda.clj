@@ -6,7 +6,8 @@
             [clojure.data.json :as json])
   (:require [datomic.api :as d])
   (:require [colorcloud.datomic.dbschema :as dbschema]
-            [colorcloud.datomic.dbdata :as dbdata])
+            [colorcloud.datomic.dbdata :as dbdata]
+            [colorcloud.datomic.timeline :as timeline])
   (:import [java.io FileReader]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis])    ; bring in redis namespace
@@ -244,7 +245,27 @@
                     nameruleset
                     pname)
         all (clojure.set/union parent child)  
-       ]
+      ]
     (prn parent child all)
     (map (comp show-entity-by-id first) all)))
+
+
+; list an entity attribute's timeline
+(defn timeline
+  "list an entity's attribute's timeline "
+  [eid attr]
+  (let [txhist (timeline/timeline eid attr)]
+    (doseq [t txhist]
+      (show-entity-by-id (first t))
+      (show-entity-by-id (second t)))))
+
+; list a person's all transaction timeline
+(defn person-timeline
+  "list a person's transaction timeline"
+  [eid]
+  (let [txhist (timeline/person-timeline eid)]
+    (doseq [t txhist]
+      (prn t)
+      (show-entity-by-id (first t)))))
+
 
