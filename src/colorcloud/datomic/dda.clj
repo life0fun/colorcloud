@@ -269,3 +269,7 @@
       (show-entity-by-id (first t)))))
 
 
+
+(defn create-homework
+  []
+  (dbdata/create-homework :math))

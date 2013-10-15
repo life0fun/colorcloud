@@ -49,23 +49,32 @@
 ; app partition
 (defpart app)
 
+(def person-status [:pending :active :inactive :cancelled])
+(def child-grade [:first :second :third :fourth :fifth :sixth :seventh :freshman :junior :senior])
+(def subject [:math :science :reading :coding :art :gym :reporting :game])
+(def course-schedule [:M :T :W :TH :F :SA :S])
+(def assignment-type [:homework :course])
+(def assignment-status [:pending :active :overdue :cancelled])
+(def activity-type [:call :sms :mms :app :url :download :lock])
 
 (defschema parent
   (part app)
   (fields
     [fname :string :indexed :fulltext]
     [lname :string :indexed :fulltext]
+    [status :enum person-status "person status, pending, active, etc"]
     [age :long]
     [address :string :fulltext]
     [gender :keyword "use M and F repr gender string"]
     [email :string :many :indexed :fulltext]
     [phone :string :many :indexed :fulltext]
-    [contact :ref :many "contact list of the peroson"]
+    [contacts :ref :many "contact list of the peroson"]
     [location :ref :many "location list of a person, most recent"]
-    [upvotes :long "persons popularity"]
-    [status :enum [:pending :active :inactive :cancelled]]
+    [popularity :long "persons popularity"]
+    [followers :ref :many "the follower of the parent"]
     [child :ref :many "a list of parent's children"]
-    [assignment :ref :many "all assignments parents assigned to kids"]
+    [assignment :ref :many "all assignments this parent created to children"]
+    [likes :ref :many "what homework the parent liked"]
     [friends :ref :many "a list of friends of parents"]  ; the friends of parents
     [comments :ref :many "can not personal attack on parent"]))
 
@@ -75,36 +84,37 @@
   (fields
     [fname :string :indexed :fulltext]
     [lname :string :indexed :fulltext]
+    [status :enum person-status "person status, pending, active, etc"]
     [age :long]
     [address :string :fulltext]
     [gender :keyword "use :M and :F repr gender string"]
     [email :string :many :indexed :fulltext]
     [phone :string :many :indexed :fulltext]
-    [contact :ref :many "list of contact of the peroson"]
+    [contacts :ref :many "list of contact of the peroson"]
     [location :ref :many "location list of a person, most recent"]
-    [upvotes :long "persons popularity"]
-    [status :enum [:pending :active :inactive :cancelled]]
+    [popularity :long "persons popularity"]
     [parent :ref :many "a list of kids parents"] ;
-    [friends :ref :many "a list of kids friends"]
+    [friends :ref :many "a list of kids friends, as followers"]
     [classmates :ref :many "classmate of the kid"]
-    [grade :enum [:first :second :third :fourth :fifth :sixth :seventh :freshman :junior :senior]]
-    [activity :ref :many "kids digital activities, calls, sms, app usages, etc"]
-    [assignment :ref :many "list of assignments to child"]
+    [grade :enum child-grade "the grade the kid is in"]
+    [activities :ref :many "kids digital activities, ref to activity entity "]
+    [assignments :ref :many "list of assignments to child"]
+    [likes :ref :many "what homework the kid liked"]
     [comments :ref :many "can we comment child's performance by authorities ?"]))
 
 ; so questions or github project or online streaming courses
 (defschema homework
   (part app)
   (fields
-    [category :enum [:math :science :reading :coding :art :gym :reporting :game] "assignment category"]
-    [title :string :fulltext]
-    [body :string :fulltext]
+    [subject :enum subject "homework subject, math, art, reading, etc"]
+    [title :string :indexed :fulltext]
+    [content :string :fulltext]
     [author :ref :many "the author of the homework"]
     [uri :uri "uri of the homework, if any"]
-    [course :ref :many "which course this homework related to"]
-    [upvotes :long "does people like this assignment ?"]
-    [solvecnt :long "how many children solved this problem"]
-    [topanswer :ref :many "a list of top answers"]
+    [course :ref :many "which course content this homework related to"]
+    [popularity :long "how many people like this assignment ?"]
+    [solved :long "how many kids solved the problem in total?"]
+    [topanswers :ref :many "a list of top answers"]
     [comments :ref :many "comments for the homework"]))  ; a list of answers with 
 
 
@@ -112,15 +122,15 @@
 (defschema course
   (part app)
   (fields
-    [category :enum [:math :science :reading :coding :art :gym :reporting :game] "course category"]
+    [subject :enum subject "course subject, math, art, reading, etc"]
     [title :string :fulltext]
-    [body :string :fulltext]
+    [content :string :fulltext]
     [uri :uri "content uri of the course, can be video, audio, weburl"]
     [author :ref :many "the author, teacher of the course"]
-    [schedule :enum [:M :T :W :TH :F :SA :S] :many "weekday schedule"]
-    [hour :long :many "hour schedule"]
-    [starttime :instant :many "absolute start time"]
-    [homework :ref :many "homeworks for the course"]
+    [schedule :enum course-schedule "weekday schedule"]
+    [datetime :instant :many "date time of schedule"]
+    [duration :long "duration"]
+    [homeworks :ref :many "homeworks for the course"]
     [comments :ref :many "course comments"]))
 
 
@@ -129,10 +139,10 @@
   (fields
     [homework :ref :one "one assignment to one child at a time. batch assignment later"]
     [course :ref :one "one assignment to one child to take the course"]
-    [type :enum [:homework :course] "solve a homework or take a course"]
+    [type :enum assignment-type "solve a homework or take a course"]
     [from :ref :one "assignment created from who"]
     [to :ref :many "make one assignment to one child, or many children ?"]
-    [status :enum [:pending :active :overdue :cancelled] "status of assignment"]
+    [status :enum assignment-status "status of assignment"]
     [hint :string :many "hints to the assignment"]
     [related :ref :many "similar or related assignment"]
     [watcher :ref :many "watchers of the assignment"]
@@ -146,8 +156,9 @@
   (part app)
   (fields
     [assignment :ref :one "one answer to one child assignment"]
-    [child :ref :one "each child must submit one answer"]
+    [author :ref :one "the author of this answer"]
     [score :long "score of the answer"]
+    [submittime :instant "the submit time"]
     [comments :ref :many "the comments tree for the answer"]))
 
 
@@ -156,22 +167,24 @@
   (part app)
   (fields
     [author :ref :one "the author of the comments"]
-    [body :string :fulltext "the body of a comment"]
-    [comments :ref :one "which comments this comment is to"]
-    [subject :ref :one "the subject comments made to, ref to any entity"]
+    [content :string :fulltext "the body of a comment"]
+    [comments :ref :one "which comments this comment is to, ref to comments itself"]
+    [subject :ref :one "the subject comments made to, ref to person, homework entity"]
     [upvotes :long "how many upvotes"]))
 
 
-; activities, use since db to query
-(defschema activities
+; activity, links two entity
+(defschema activity
   (part app)
   (fields
-    [child :ref :indexed :one "which child created the activity"]
+    [author :ref :indexed :one "who created the activity"]
     [name :string :one "activity name"]
-    [type :enum [:call :sms :mms :app :url :download :lock]]
+    [type :enum activity-type "activity type"]
     [url :string :many "the url downloaded"]
     [appname :string :one "the app name"]
     [message :string :many "message content"]
+    [from :ref :one "origin entity"]
+    [to :ref :many "target entity"]
     [start :long "start time of activity"]
     [end :long "end time of activity"]))
 

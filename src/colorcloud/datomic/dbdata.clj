@@ -41,6 +41,9 @@
 ; for many ref, you can specify a list of entity id.
 ;
 
+
+(declare create-homework-math)
+
 ;; store database uri
 (defonce uri "datomic:free://localhost:4334/colorcloud")
 ;; connect to database
@@ -52,6 +55,8 @@
 ; get the id for a person
 (defn getPersonId [] (let [n (swap! PersonId inc)] (str n)))
 
+; the macro to stringify a form
+(defmacro stringify [question] (str question))
 
 (defn parent-attr
   "compose a map of for attributes of parent"
@@ -113,3 +118,23 @@
         cphone (str "100-000-" cid)
         child (child-attr cfname clname cage caddr cgender cemail cphone)]
     child))
+
+
+; create homework to be assigned
+(defn create-homework
+  "create a homework"
+  [subject]
+  (case subject
+    :math (create-homework-math)
+    "default"))
+
+
+(defn create-homework-math
+  "create a simple math homework"
+  []
+  (let [lhs (rand-int 100)
+        rhs (rand-int 100)
+        op (rand-nth (map str ['+ '- '* '/]))
+        form (str lhs op rhs)]
+    (prn "the math question is " form)
+    ))
