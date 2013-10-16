@@ -106,6 +106,23 @@
     [likes :ref :many "what homework the kid liked"]
     [comments :ref :many "can we comment child's performance by authorities ?"]))
 
+
+; online streaming a course
+(defschema course
+  (part app)
+  (fields
+    [subject :enum subject "course subject, math, art, reading, etc"]
+    [title :string :fulltext]
+    [content :string :fulltext]
+    [uri :uri "content uri of the course, can be video, audio, weburl"]
+    [author :ref :many "the author, teacher of the course"]
+    [schedule :enum course-schedule "weekday schedule"]
+    [datetime :instant :many "date time of schedule"]
+    [duration :long "duration"]
+    [homeworks :ref :many "homeworks for the course"]
+    [comments :ref :many "course comments"]))
+
+
 ; so questions or github project or online streaming courses
 (defschema homework
   (part app)
@@ -122,20 +139,6 @@
     [comments :ref :many "comments for the homework"]))  ; a list of answers with 
 
 
-; online streaming a course
-(defschema course
-  (part app)
-  (fields
-    [subject :enum subject "course subject, math, art, reading, etc"]
-    [title :string :fulltext]
-    [content :string :fulltext]
-    [uri :uri "content uri of the course, can be video, audio, weburl"]
-    [author :ref :many "the author, teacher of the course"]
-    [schedule :enum course-schedule "weekday schedule"]
-    [datetime :instant :many "date time of schedule"]
-    [duration :long "duration"]
-    [homeworks :ref :many "homeworks for the course"]
-    [comments :ref :many "course comments"]))
 
 
 (defschema assignment
@@ -161,8 +164,9 @@
   (fields
     [assignment :ref :one "one answer to one child assignment"]
     [author :ref :one "the author of this answer"]
+    [answer :string :fulltext " the answer to the assignment"]
     [score :long "score of the answer"]
-    [submittime :instant "the submit time"]
+    [completetime :instant "the submit time"]
     [comments :ref :many "the comments tree for the answer"]))
 
 

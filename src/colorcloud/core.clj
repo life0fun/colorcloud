@@ -16,6 +16,11 @@
                      "lein datomic initialize  # for running transactor"
                      "lein run create-schema"
                      "lein run list-schema"
+                     "lein run add-family (add 2 families)"
+                     "lein run create-homework (multiple times)"
+                     "lein run create-assignment"
+                     "lein run find-assignment"
+                     "lein run submit-answer assignment-id child-id  <= from find-assignment"
                 ))
 
 (defn -main [& args]
@@ -37,4 +42,6 @@
     "find-assignment" (dda/find-assignment)
     "fake-comment" (dda/fake-comment)
     "find-comment" (dda/find-comment)
+    "find-answer" (dda/find-answer)
+    "submit-answer" (dda/submit-answer (read-string (second args)) (read-string (last args)))
     (doall (map prn help-info))))

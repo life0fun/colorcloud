@@ -48,7 +48,8 @@
 ; [:db/add entity-id attribute value]
 ; (d/transact conn [newch [:db/add pid :parent/child (:db/id newch)]]
 ; d/transact tx-data is a list of lists, each of which specifies a write operation
-; need to use vec to convert list from map to vector to be used in transact.
+; for single write datom(map tuple), wrap with [datom-tuple]
+; for a list of write datom tuple from map, use (vec ([] [])) to wrap them.
 ; (d/transact conn (vec (map make-attr (d/q '[:find ?e :where []))))
 ;
 ;
@@ -380,3 +381,25 @@
   []
   (let [cids (d/q '[:find ?e :where [?e :comments/author]] db)]
     (map (comp show-entity-by-id first) cids)))
+
+
+; submit an answer to an assignment
+(defn submit-answer
+  "submit an answer to an assignment"
+  [assid authorid]
+  (let [asse (d/entity db assid)   ; reify ass entity
+        hwe (->> asse :assignment/homework :db/id (d/entity db))
+        answ (str (:homework/content hwe) " == " (rand-int 100))
+        nowd (.toDate (clj-time/now))
+        answmap (dbdata/answer-attr assid authorid answ nowd)]
+    (prn (d/touch asse))
+    (prn (d/touch hwe))
+    (prn answmap)
+    (d/transact conn [answmap])))
+
+; find all answers
+(defn find-answer
+  "find all answers"
+  []
+  (let [ansid (d/q '[:find ?e :where [?e :answer/answer]] db)]
+    (map (comp show-entity-by-id first) ansid)))

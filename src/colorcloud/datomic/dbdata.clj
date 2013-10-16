@@ -183,3 +183,16 @@
           :comments/upvotes 1}]
     (prn m)
     m))
+
+
+; answer attr
+(defn answer-attr
+  "basic answer attr map"
+  [assid authorid answer completetime]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :answer/assignment assid
+          :answer/author authorid
+          :answer/answer answer
+          :answer/completetime completetime}]
+    (prn m)
+    m))
