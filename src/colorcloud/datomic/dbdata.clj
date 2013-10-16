@@ -7,6 +7,7 @@
   (:require [datomic.api :as d])
   (:require [colorcloud.datomic.dbschema :as dbschema])
   (:import [java.io FileReader]
+           [java.net URI]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis])    ; bring in redis namespace
   (:require [clj-time.core :as clj-time :exclude [extend]]
@@ -129,12 +130,43 @@
     "default"))
 
 
+(defn homework-attr
+  "compose a map of attrs for a homework entity"
+  [subject title content uri]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :homework/subject subject
+          :homework/title title
+          :homework/content content
+          :homework/uri uri}]
+    (prn m)
+    m))
+
+
+; the enum must be fully qualified, :homework.subject/math
 (defn create-homework-math
   "create a simple math homework"
   []
   (let [lhs (rand-int 100)
         rhs (rand-int 100)
         op (rand-nth (map str ['+ '- '* '/]))
-        form (str lhs op rhs)]
-    (prn "the math question is " form)
-    ))
+        content (str lhs " " op " " rhs " = ?")
+        title "simple add sub mul div"
+        subject :homework.subject/math
+        uri (URI. "http://www.colorcloud.com/math")
+        hwmap (homework-attr subject title content uri)]
+    (prn "the math question is " hwmap)
+    hwmap))
+
+
+; form assignment attr map
+(defn assignment-attr
+  "basic assignment attr map"
+  [pid cid hwid start due]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :assignment/homework hwid
+          :assignment/from pid
+          :assignment/to cid
+          :assignment/start start
+          :assignment/due due}]
+    (prn m)
+    m))

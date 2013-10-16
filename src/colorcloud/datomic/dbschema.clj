@@ -41,6 +41,8 @@
 ;
 ; all the :ref :many attribute stores clojure.lang.MapEntry. use :db/id to get the id.
 ; 
+; To check particular attri, (d/entid db :parent/child), then lein run show-entity
+;
 ; how can we do compound unique key ?
 ; :db/unique implies :db/index. 
 ; :db.unique/value - attempts to insert a duplicate value for a different entity id will fail
@@ -49,6 +51,8 @@
 ; app partition
 (defpart app)
 
+; for enum value in datomic is represented as entity with :db/ident attribute.
+; :db/ident :homework/subject == :db/ident :homework.subject/math
 (def person-status [:pending :active :inactive :cancelled])
 (def child-grade [:first :second :third :fourth :fifth :sixth :seventh :freshman :junior :senior])
 (def subject [:math :science :reading :coding :art :gym :reporting :game])

@@ -32,4 +32,7 @@
     "timeline" (dda/timeline (read-string (second args)) (last args))
     "person-timeline" (dda/person-timeline (read-string (second args)))
     "create-homework" (dda/create-homework)
+    "find-homework" (dda/find-homework)
+    "create-assignment" (dda/create-assignment)
+    "find-assignment" (dda/find-assignment)
     (doall (map prn help-info))))

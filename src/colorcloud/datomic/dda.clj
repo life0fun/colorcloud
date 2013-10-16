@@ -47,7 +47,7 @@
 ; {:db/id entity-id attribute value attribute value ... }
 ; [:db/add entity-id attribute value]
 ; (d/transact conn [newch [:db/add pid :parent/child (:db/id newch)]]
-;
+; d/transact tx-data is a list of lists, each of which specifies a write operation
 ;
 ; In general, unique temporary ids are mapped to new entity ids.
 ; within the same transaction, the same tempid maps to the same real entity id.
@@ -59,11 +59,13 @@
 ; within a transaction will resolve to a single entity id.
 ;
 ; (def e (d/entity (db conn) attr-id) gets all entity with ids
-; (keys e) or (:parent/child (d/entity (db conn) 17592186045703))
+; (keys e) or (:parent/child (d/entity db 17592186045703))
+; entity attr rets a map entry for all children. (:parent/child (d/entity db pid))
 ; 
 ; entity-id can be used at both side of the datom, e.g., give a parent entity id,
-;   (d/q '[:find ?e :in $ ?attr :where [17592186045703 ?attr ?e]] db :parent/child)
-;   (d/q '[:find ?e :in $ ?attr :where [?e ?attr 17592186045703]] db :child/parent)
+;   (d/q '[:find ?e :in $ ?attr :where [17592186045703 ?attr ?e] [...] ] db :parent/child)
+;   (d/q '[:find ?e :in $ ?attr :where [?e ?attr 17592186045703] [...] ] db :child/parent)
+; query :where takes a vardic list, not a list of list.
 ;
 
 ; outbound query and inbound query
@@ -95,6 +97,7 @@
 
 (declare find-parent-by-cid)
 (declare find-parent-by-cname)
+(declare inc-homework-popularity)
 
 ;; parse schema dtm file
 ;(def schema-tx (read-string (slurp "./resource/schema/seattle-schema.dtm")))
@@ -118,6 +121,29 @@
   []
   (dbschema/create-schema conn))
 
+
+; to use the reted write op tuple inside a transact, wrap inside (vec code)
+(defn incby-stmt
+  "ret a write datom to inc a counter by amt for d/transact conn (vec incby-stmt)"
+  [eid attr amt]
+  (let [code [:db/add eid attr (-> (d/entity db eid) attr ((fnil + 0) amt))]]
+    (prn "code " code)
+    code))
+
+; to use the reted write op tuple inside a transact, wrap inside (vec code)
+(defn setref-stmt
+  "ret a write datomc to set a ref attr by eid for d/transact conn (vec setref-stmt)"
+  [eid attr refid]
+  (let [code [:db/add eid attr refid]]
+    (prn "code " code)
+    code))
+
+(defn setval-stmt
+  "ret a write datom to set the value of a attr by eid for d/transact conn (vec setref-stmt)"
+  [eid attr value]
+  (let [code [:db/add eid attr value]]
+    (prn "code " code)
+    code))
 
 ; list all install-ed attrs in db
 (defn list-attr
@@ -172,7 +198,7 @@
   (let [pe (d/entity db pid)   ; get the lazy entity by id
         ch (:parent/child pe)
         newch (assoc (dbdata/create-child) :child/parent pid)]
-    (d/transact conn [ newch
+    (d/transact conn [newch
                       [:db/add pid :parent/child (:db/id newch)]])
     (prn pid pe ch newch)))
 
@@ -268,8 +294,58 @@
       (prn t)
       (show-entity-by-id (first t)))))
 
-
-
+; create a math homework
 (defn create-homework
+  "create a simple math homework"
   []
-  (dbdata/create-homework :math))
+  (let [hw (dbdata/create-homework :math)]
+    (d/transact conn [hw]))) ; tx-data is a list of write operations.
+
+
+(defn find-homework
+  "find homework by subject"
+  []
+  (let [subject :homework.subject/math
+        hws (d/q '[:find ?e ?content :in $ ?sub 
+                   :where [?e :homework/content ?content]
+                          [?e :homework/subject ?sub]]
+                  db 
+                  subject)
+        eids (map first hws)
+        ]
+    (prn hws eids)
+    eids))
+
+
+(defn inc-homework-popularity
+  "increase homework popularity"
+  []
+  (let [hwids (find-homework)
+        incstmt (map #(incby-stmt % :homework/popularity 1) hwids)]
+    (prn incstmt)
+    (d/transact conn (vec incstmt))))
+
+
+; create an assignment
+(defn create-assignment
+  "create an assignment from a homework to a child"
+  []
+  (let [pid (ffirst (d/q '[:find ?e :where [?e :parent/child]] db))
+        cid (:db/id (first (:parent/child (d/entity db pid))))  ; from entity, you got map-entry
+        hwid (first (find-homework))
+        nowdt (clj-time/now)
+        nowd (.toDate nowdt)
+        duedt (clj-time/plus nowdt (clj-time/hours 1))
+        dued (.toDate duedt)
+        assg (dbdata/assignment-attr pid cid hwid nowd dued)
+        ]
+    (prn pid cid hwid nowdt nowd duedt dued)
+    (d/transact conn [assg])))
+
+; find assignment
+(defn find-assignment
+  "find an assignment by time, id, or anything"
+  []
+  (let [assg (d/q '[:find ?e :where [?e :assignment/homework]] db)
+        assgid (ffirst assg)]
+    (show-entity-by-id assgid)))
