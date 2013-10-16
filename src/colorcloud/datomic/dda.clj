@@ -48,6 +48,9 @@
 ; [:db/add entity-id attribute value]
 ; (d/transact conn [newch [:db/add pid :parent/child (:db/id newch)]]
 ; d/transact tx-data is a list of lists, each of which specifies a write operation
+; need to use vec to convert list from map to vector to be used in transact.
+; (d/transact conn (vec (map make-attr (d/q '[:find ?e :where []))))
+;
 ;
 ; In general, unique temporary ids are mapped to new entity ids.
 ; within the same transaction, the same tempid maps to the same real entity id.
@@ -311,7 +314,7 @@
                           [?e :homework/subject ?sub]]
                   db 
                   subject)
-        eids (map first hws)
+        eids (map first hws)  ; always ret the first homework to assign.
         ]
     (prn hws eids)
     eids))
@@ -349,3 +352,31 @@
   (let [assg (d/q '[:find ?e :where [?e :assignment/homework]] db)
         assgid (ffirst assg)]
     (show-entity-by-id assgid)))
+
+
+; make a comment on any eid
+(defn fake-comment
+  "fake a comment on an assignment"
+  []
+  (letfn [(commdata [[subid authorid content]]
+            (let [text (str content " is too hard !")]
+              (dbdata/comment-attr subid authorid text)))]
+
+    (let [assgns (d/q '[:find ?e ?to ?content
+                        :where [?e :assignment/homework]
+                               [?e :assignment/to ?to]
+                               [?e :assignment/homework ?hwid]
+                               [?hwid :homework/content ?content]] 
+                    db)
+        comments (map commdata assgns)
+        ]
+      (prn assgns)
+      (prn comments)
+      (d/transact conn (vec comments)))))
+
+; list all comments
+(defn find-comment
+  "find a comment"
+  []
+  (let [cids (d/q '[:find ?e :where [?e :comments/author]] db)]
+    (map (comp show-entity-by-id first) cids)))

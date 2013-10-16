@@ -1,8 +1,8 @@
 (defproject colorcloud "0.1.0-SNAPSHOT"
   :description "colorcloud using datomic"
   :url "http://colorcloud.com"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :license {:name "Proprietary ! Not in public domain"
+            :url "www.colorcloud.com"}
 
   :datomic {
     :schemas ["resources/schema" ["seattle-schema.dtm"

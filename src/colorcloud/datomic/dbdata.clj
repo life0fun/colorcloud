@@ -170,3 +170,16 @@
           :assignment/due due}]
     (prn m)
     m))
+
+
+; comment attr, subject is the id
+(defn comment-attr
+  "basic comment attr map"
+  [subid authorid content]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :comments/author authorid
+          :comments/content content
+          :comments/subject subid
+          :comments/upvotes 1}]
+    (prn m)
+    m))

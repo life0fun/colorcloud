@@ -35,4 +35,6 @@
     "find-homework" (dda/find-homework)
     "create-assignment" (dda/create-assignment)
     "find-assignment" (dda/find-assignment)
+    "fake-comment" (dda/fake-comment)
+    "find-comment" (dda/find-comment)
     (doall (map prn help-info))))
