@@ -107,23 +107,39 @@
     [comments :ref :many "can we comment child's performance by authorities ?"]))
 
 
-; online streaming a course
+; online streaming a course, each course repr one section of 
 (defschema course
   (part app)
   (fields
     [subject :enum subject "course subject, math, art, reading, etc"]
-    [title :string :fulltext]
-    [content :string :fulltext]
-    [uri :uri "content uri of the course, can be video, audio, weburl"]
+    [title :string :fulltext " the title "]
+    [credit :long "the credit of the course"]
+    [overview :string :fulltext "overview of the course, what it covers"]
+    [materials :string :fulltext "materials, brief content"]
+    [contenturi :uri "content uri of the course, can be video, audio, weburl"]
     [author :ref :many "the author, teacher of the course"]
-    [schedule :enum course-schedule "weekday schedule"]
-    [datetime :instant :many "date time of schedule"]
-    [duration :long "duration"]
-    [homeworks :ref :many "homeworks for the course"]
+    [grading :text "how the grading policy"]
+    [lectures :ref :many "all the lectures on this course"]
     [comments :ref :many "course comments"]))
 
+; lectures for a course, each course must have 1+ lectures
+(defschema lecture
+  (part app)
+  (fields
+    [course :ref :one "the course of this lecture"]
+    [seqno :string :one "lecture sequence number, 1a, 1b, 2a, 2b, etc"]
+    [date :instant :one "the date time the lecture scheduled"]
+    [topic :string :fulltext "the topic of the lecture"]
+    [content :string :fulltext "all related content"]
+    [contenturi :uri "the content uri, include slides, handouts"]
+    [deliverable :string "which homework to due, any labs"]
+    [vidoeuri :uri "the video uri"]
+    [wiki :uri "the discussion group, wiki and uri"]
+    [readings :uri "the reading assignment for the topic"]
+    [homework :ref :many "the homework of the lecture"]
+    [comments :ref :many "feedback comments to the lecture"]))
 
-; so questions or github project or online streaming courses
+; so questions or github project or online streaming course lecture
 (defschema homework
   (part app)
   (fields
@@ -132,20 +148,19 @@
     [content :string :fulltext]
     [author :ref :many "the author of the homework"]
     [uri :uri "uri of the homework, if any"]
-    [course :ref :many "which course content this homework related to"]
+    [lecture :ref :many "which course lecture this homework related to"]
+    [difficulty: :long "difficulty level, 5 star"]
     [popularity :long "how many people like this assignment ?"]
     [solved :long "how many kids solved the problem in total?"]
     [topanswers :ref :many "a list of top answers"]
     [comments :ref :many "comments for the homework"]))  ; a list of answers with 
 
 
-
-
 (defschema assignment
   (part app)
   (fields
     [homework :ref :one "one assignment to one child at a time. batch assignment later"]
-    [course :ref :one "one assignment to one child to take the course"]
+    [lecture :ref :one "one assignment to one child to take the course"]
     [type :enum assignment-type "solve a homework or take a course"]
     [from :ref :one "assignment created from who"]
     [to :ref :many "make one assignment to one child, or many children ?"]
@@ -177,7 +192,7 @@
     [author :ref :one "the author of the comments"]
     [content :string :fulltext "the body of a comment"]
     [comments :ref :one "which comments this comment is to, ref to comments itself"]
-    [subject :ref :one "the subject comments made to, ref to person, homework entity"]
+    [subject :ref :one "the subject comments made to, ref to person, homework, course, lecture entity"]
     [upvotes :long "how many upvotes"]))
 
 
@@ -193,8 +208,8 @@
     [message :string :many "message content"]
     [from :ref :one "origin entity"]
     [to :ref :many "target entity"]
-    [start :long "start time of activity"]
-    [end :long "end time of activity"]))
+    [start :instant "start time of activity"]
+    [end :instant "end time of activity"]))
 
 
 (defn entity-attr

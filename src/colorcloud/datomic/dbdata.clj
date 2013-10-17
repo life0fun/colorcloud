@@ -121,15 +121,65 @@
     child))
 
 
+; for course and lectures
+(defn course-attr
+  "compose a map of attrs for a course entity"
+  [subject title overview materials contenturi]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :course/subject subject
+          :course/title title
+          :course/overview overview
+          :course/materials materials
+          :course/contenturi contenturi}]
+    (prn m)
+    m))
+
+(defn lecture-attr
+  "compose a map of attrs for a course lecture"
+  [course seqno date topic content videouri]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :lecture/course course
+          :lecture/seqno seqno
+          :lecture/date date
+          :lecture/topic topic
+          :lecture/content content
+          :lecture/videouri videouri}]
+    (prn m)
+    m))
+
+; the enum must be fully qualified, :homework.subject/math
+(defn create-course-coding
+  "create a simple math course and lectures"
+  []
+  (let [subject :course.subject/coding
+        title "learning datomic"
+        overview (str "datomic is a database as value based on clojure, awesome !")
+        materials (str "http://docs.datomic.com/tutorial.html")
+        contenturi (URI. "http://docs.datomic.com/")
+
+        lectseq (str "1a")
+        lecdate (.toDate (clj-time/date-time 2013 11 24 10 20))
+        topic (str "The day of datomic")
+        content (str "The Day of Datomic project is a collection 
+                     of samples and tutorials for learning Datomic 
+                     at a Clojure REPL.")
+        videouri (URI. "https://github.com/Datomic/day-of-datomic")
+        
+        hwmap (course-attr subject title content uri)]
+    (prn "the math question is " hwmap)
+    hwmap))
+
 ; create homework to be assigned
-(defn create-homework
-  "create a homework"
+(defn create-course
+  "create a course and some lectures"
   [subject]
   (case subject
-    :math (create-homework-math)
+    :math (create-course-coding)
     "default"))
 
 
+;
+; homework for course lecture, or random questions from anybody
 (defn homework-attr
   "compose a map of attrs for a homework entity"
   [subject title content uri]
@@ -140,6 +190,14 @@
           :homework/uri uri}]
     (prn m)
     m))
+
+; create homework to be assigned
+(defn create-homework
+  "create a homework"
+  [subject]
+  (case subject
+    :math (create-homework-math)
+    "default"))
 
 
 ; the enum must be fully qualified, :homework.subject/math

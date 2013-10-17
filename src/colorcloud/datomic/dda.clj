@@ -298,6 +298,74 @@
       (prn t)
       (show-entity-by-id (first t)))))
 
+
+
+; create an online course
+(defn create-course-lecture
+  "create a course lecture for certain course id"
+  [cid]
+  (let [lectseq (str "1a")
+        lecdate (.toDate (clj-time/date-time 2013 11 24 10 20))
+        topic (str "The day of datomic")
+        content (str "The Day of Datomic project is a collection 
+                     of samples and tutorials for learning Datomic 
+                     at a Clojure REPL.")
+        videouri (URI. "https://github.com/Datomic/day-of-datomic")
+        lecturem (dbdata/lecture-attr cid lectseq lecdate topic content videouri)]
+    ;(d/transact conn [lecturem])
+    lecturem)) ; tx-data is a list of write datoms
+
+
+; create homework to be assigned
+(defn create-course
+  "create a course and some lectures"
+  [subject]
+  (case subject
+    :coding (create-course-coding)
+    "default"))
+
+
+; the enum must be fully qualified, :homework.subject/math
+(defn create-course-coding
+  "create a simple math course and lectures"
+  []
+  (let [subject :course.subject/coding
+        title "learning datomic"
+        credit 3
+        overview (str "datomic is a database as value based on clojure, awesome !")
+        materials (str "http://docs.datomic.com/tutorial.html")
+        contenturi (URI. "http://docs.datomic.com/")
+        coursem (course-attr subject title content uri)]
+    ;(d/transact conn [coursem])
+    coursem))
+
+(defn create-course-lecture
+  "create a course, and a batch of lecture in one transaction"
+  []
+  (let [cm (create-course-coding)
+        cid (:db/id cm)
+        lecm (create-course-lecture cid)
+        lid (:db/id lecm)]
+    (prn cm cid lecm lid)))
+    
+
+; find a course
+(defn find-course
+  "find course by subject"
+  []
+  (let [subject :course.subject/math
+        eids (d/q '[:find ?c ?l :in $ ?sub 
+                    :where [?e :course/lectures]
+                           [?e :lecture/course ?e]]
+                db 
+                subject)
+        cids (map first eids)  ; always ret the first homework to assign.
+        lids (map second eids)]
+    (map show-entity-by-id cids)
+    (map show-entity-by-id lids)
+    eids))
+
+
 ; create a math homework
 (defn create-homework
   "create a simple math homework"
@@ -330,7 +398,7 @@
     (d/transact conn (vec incstmt))))
 
 
-; create an assignment
+; create an assignment for any homework that 
 (defn create-assignment
   "create an assignment from a homework to a child"
   []
