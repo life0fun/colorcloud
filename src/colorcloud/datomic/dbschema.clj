@@ -118,7 +118,7 @@
     [materials :string :fulltext "materials, brief content"]
     [contenturi :uri "content uri of the course, can be video, audio, weburl"]
     [author :ref :many "the author, teacher of the course"]
-    [grading :text "how the grading policy"]
+    [grading :string "how the grading policy"]
     [lectures :ref :many "all the lectures on this course"]
     [comments :ref :many "course comments"]))
 
@@ -133,7 +133,7 @@
     [content :string :fulltext "all related content"]
     [contenturi :uri "the content uri, include slides, handouts"]
     [deliverable :string "which homework to due, any labs"]
-    [vidoeuri :uri "the video uri"]
+    [videouri :uri "the video uri"]
     [wiki :uri "the discussion group, wiki and uri"]
     [readings :uri "the reading assignment for the topic"]
     [homework :ref :many "the homework of the lecture"]
@@ -149,9 +149,9 @@
     [author :ref :many "the author of the homework"]
     [uri :uri "uri of the homework, if any"]
     [lecture :ref :many "which course lecture this homework related to"]
-    [difficulty: :long "difficulty level, 5 star"]
-    [popularity :long "how many people like this assignment ?"]
-    [solved :long "how many kids solved the problem in total?"]
+    [difficulty :long "difficulty level, 5 star"]
+    [popularity :long "how many people like this assignment "]
+    [solved :long "how many kids solved the problem in total"]
     [topanswers :ref :many "a list of top answers"]
     [comments :ref :many "comments for the homework"]))  ; a list of answers with 
 

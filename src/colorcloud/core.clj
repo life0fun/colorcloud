@@ -21,6 +21,7 @@
                      "lein run create-assignment"
                      "lein run find-assignment"
                      "lein run submit-answer assignment-id child-id  <= from find-assignment"
+                     "lein run find-answer"
                 ))
 
 (defn -main [& args]
@@ -44,5 +45,5 @@
     "find-comment" (dda/find-comment)
     "find-answer" (dda/find-answer)
     "submit-answer" (dda/submit-answer (read-string (second args)) (read-string (last args)))
-    "create-course" (dda/create-course-lecture)
+    "create-course-lecture" (dda/create-course-and-lecture)
     (doall (map prn help-info))))

@@ -9,6 +9,7 @@
             [colorcloud.datomic.dbdata :as dbdata]
             [colorcloud.datomic.timeline :as timeline])
   (:import [java.io FileReader]
+           [java.net URI]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
   (:require [clj-redis.client :as redis])    ; bring in redis namespace
   (:require [clj-time.core :as clj-time :exclude [extend]]
@@ -102,6 +103,9 @@
 (declare find-parent-by-cid)
 (declare find-parent-by-cname)
 (declare inc-homework-popularity)
+(declare create-lecture)
+(declare create-course-coding)
+(declare create-homework-math)
 
 ;; parse schema dtm file
 ;(def schema-tx (read-string (slurp "./resource/schema/seattle-schema.dtm")))
@@ -299,30 +303,30 @@
       (show-entity-by-id (first t)))))
 
 
-
-; create an online course
-(defn create-course-lecture
-  "create a course lecture for certain course id"
-  [cid]
-  (let [lectseq (str "1a")
-        lecdate (.toDate (clj-time/date-time 2013 11 24 10 20))
-        topic (str "The day of datomic")
-        content (str "The Day of Datomic project is a collection 
-                     of samples and tutorials for learning Datomic 
-                     at a Clojure REPL.")
-        videouri (URI. "https://github.com/Datomic/day-of-datomic")
-        lecturem (dbdata/lecture-attr cid lectseq lecdate topic content videouri)]
-    ;(d/transact conn [lecturem])
-    lecturem)) ; tx-data is a list of write datoms
-
-
 ; create homework to be assigned
 (defn create-course
-  "create a course and some lectures"
-  [subject]
-  (case subject
-    :coding (create-course-coding)
-    "default"))
+  "create a course "
+  ([]
+    (create-course :coding))
+
+  ([subject]
+    (case subject
+      :coding (create-course-coding)
+      "default")))
+
+
+; create course and lecture together
+(defn create-course-and-lecture
+  "create a course, and a batch of lecture in one transaction"
+  []
+  (let [cm (create-course)
+        cid (:db/id cm)
+        lecm (create-lecture cid)
+        lid (:db/id lecm)
+        clm (assoc cm :course/lectures [lid])]
+    (prn clm)
+    (prn lecm)
+    (d/transact conn [cm lecm])))
 
 
 ; the enum must be fully qualified, :homework.subject/math
@@ -335,19 +339,24 @@
         overview (str "datomic is a database as value based on clojure, awesome !")
         materials (str "http://docs.datomic.com/tutorial.html")
         contenturi (URI. "http://docs.datomic.com/")
-        coursem (course-attr subject title content uri)]
+        coursem (dbdata/course-attr subject title overview materials contenturi)]
     ;(d/transact conn [coursem])
     coursem))
 
-(defn create-course-lecture
-  "create a course, and a batch of lecture in one transaction"
-  []
-  (let [cm (create-course-coding)
-        cid (:db/id cm)
-        lecm (create-course-lecture cid)
-        lid (:db/id lecm)]
-    (prn cm cid lecm lid)))
-    
+
+; create an online course
+(defn create-lecture
+  "create a course lecture for certain course id"
+  [cid]
+  (let [lectseq (str "1a")
+        lecdate (.toDate (clj-time/date-time 2013 11 24 10 20))
+        topic (str "The day of datomic")
+        content (str "The Day of Datomic project is a collection of samples and tutorials for learning Datomic")
+        videouri (URI. "https://github.com/Datomic/day-of-datomic")
+        lecturem (dbdata/lecture-attr cid lectseq lecdate topic content videouri)]
+    ;(d/transact conn [lecturem])
+    lecturem)) ; tx-data is a list of write datoms
+
 
 ; find a course
 (defn find-course
@@ -366,12 +375,31 @@
     eids))
 
 
-; create a math homework
+; create homework to be assigned
 (defn create-homework
+  "create a homework"
+  ([]
+    (create-homework :math))
+  ; homework with subject
+  ([subject]
+    (case subject
+      :math (create-homework-math)
+      "default")))
+
+; the enum must be fully qualified, :homework.subject/math
+(defn create-homework-math
   "create a simple math homework"
   []
-  (let [hw (dbdata/create-homework :math)]
-    (d/transact conn [hw]))) ; tx-data is a list of write operations.
+  (let [lhs (rand-int 100)
+        rhs (rand-int 100)
+        op (rand-nth (map str ['+ '- '* '/]))
+        content (str lhs " " op " " rhs " = ?")
+        title "simple add sub mul div"
+        subject :homework.subject/math
+        uri (URI. "http://www.colorcloud.com/math")
+        hwmap (dbdata/homework-attr subject title content uri)]
+    (prn "the math question is " hwmap)
+    (d/transact conn [hwmap])))
 
 
 (defn find-homework

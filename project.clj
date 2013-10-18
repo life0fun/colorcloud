@@ -7,12 +7,15 @@
   :datomic {
     :schemas ["resources/schema" ["seattle-schema.dtm"
                                   "seattle-data0.dtm"]]}
+
+  ; prfiles map
   :profiles {
     :dev {
       :datomic {
         :config "resources/free-transactor-template.properties"
         :db-uri "datomic:free://localhost:4334/colorcloud"}}}
 
+  ; dependency vector
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [com.datomic/datomic-free "0.8.4215"]
                  [datomic-schema "1.0.2"]  ; macro for db schema

@@ -45,3 +45,7 @@ You can use repl to verify database is initialized properly. Note datomic db sch
 ## Entity model
 
 With clojure, there is only one abstraction, list. Hence we have a list of courses and a list of homeworks to a list of children, etc. We extensively use db.type/ref with :db.cardinality/many to model one-to-many relationships. For many-to-many relationship, we use a dedicated entity with many cardinality.
+
+## Copyright
+
+All copyright reserved !
