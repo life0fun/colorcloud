@@ -323,10 +323,10 @@
         cid (:db/id cm)
         lecm (create-lecture cid)
         lid (:db/id lecm)
-        clm (assoc cm :course/lectures [lid])]
+        clm (assoc cm :course/lectures [lid])]  ; for :many field, add with [lid] or lid, db will handle it.
     (prn clm)
     (prn lecm)
-    (d/transact conn [cm lecm])))
+    (d/transact conn [clm lecm])))
 
 
 ; the enum must be fully qualified, :homework.subject/math
@@ -348,8 +348,8 @@
 (defn create-lecture
   "create a course lecture for certain course id"
   [cid]
-  (let [lectseq (str "1a")
-        lecdate (.toDate (clj-time/date-time 2013 11 24 10 20))
+  (let [lectseq (str "1b")
+        lecdate (.toDate (clj-time/date-time 2013 11 25 10 20))
         topic (str "The day of datomic")
         content (str "The Day of Datomic project is a collection of samples and tutorials for learning Datomic")
         videouri (URI. "https://github.com/Datomic/day-of-datomic")
@@ -362,17 +362,37 @@
 (defn find-course
   "find course by subject"
   []
-  (let [subject :course.subject/math
-        eids (d/q '[:find ?c ?l :in $ ?sub 
-                    :where [?e :course/lectures]
-                           [?e :lecture/course ?e]]
+  (let [subject :course.subject/coding
+        eids (d/q '[:find ?c ?l 
+                    :in $ ?sub 
+                    :where [?c :course/lectures ?l]    ; all courses that have lectures
+                    ] ; all lectures of the course
                 db 
                 subject)
-        cids (map first eids)  ; always ret the first homework to assign.
-        lids (map second eids)]
-    (map show-entity-by-id cids)
-    (map show-entity-by-id lids)
+        cids (map first (second eids))  ; always ret the first homework to assign.
+        lids (map second (second eids))]
+    ; (prn "cids" cids)
+    ; (prn "lids" lids)
+    (show-entity-by-id (first cids))
+    (show-entity-by-id (first lids))
     eids))
+
+
+(defn find-lecture
+  "find all lectures"
+  []
+  (let [lid (d/q '[:find ?l :where [?l :lecture/course]] db)]
+    (map show-entity-by-id (first lid))))
+
+
+(defn add-course-lecture
+  "adding a lecture to a course, need to convert id to :db/id"
+  [cid lid]
+  (let [ccode [:db/add cid :course/lectures lid]
+        lcode [:db/add lid :lecture/course cid]]
+    (d/transact conn [ccode lcode])
+    (show-entity-by-id cid)
+    (show-entity-by-id lid)))
 
 
 ; create homework to be assigned

@@ -46,4 +46,7 @@
     "find-answer" (dda/find-answer)
     "submit-answer" (dda/submit-answer (read-string (second args)) (read-string (last args)))
     "create-course-lecture" (dda/create-course-and-lecture)
+    "find-course" (dda/find-course)
+    "find-lecture" (dda/find-lecture)
+    "add-course-lecture" (dda/add-course-lecture (second args) (last args))
     (doall (map prn help-info))))
