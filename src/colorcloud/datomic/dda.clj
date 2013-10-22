@@ -36,6 +36,7 @@
 ; Within the same rule, multiple tuples are AND.
 ;
 ;
+; all eids must be number, use read-string to convert from command line. 
 ; all the :ref :many attribute stores clojure.lang.MapEntry. use :db/id to get the id.
 ; knowing entity id, query with (d/entity db eid). otherwise, [:find $t :where []]
 ; (d/entity db eid) rets the entity. entity is LAZY. attr only availabe when touch.
@@ -139,6 +140,8 @@
     code))
 
 ; to use the reted write op tuple inside a transact, wrap inside (vec code)
+; all ref attr's value is the numeric id of the entity, get by (:db/id entity), or read-string
+; for ref many attr, db will conj underneath, no worry of passing vector or scalar.
 (defn setref-stmt
   "ret a write datomc to set a ref attr by eid for d/transact conn (vec setref-stmt)"
   [eid attr refid]
@@ -384,9 +387,9 @@
   (let [lid (d/q '[:find ?l :where [?l :lecture/course]] db)]
     (map show-entity-by-id (first lid))))
 
-
+; linking a lecture to a course, ref attr's val is numeric id value.
 (defn add-course-lecture
-  "adding a lecture to a course, need to convert id to :db/id"
+  "adding a lecture to a course by setting ref attr with id numeric value"
   [cid lid]
   (let [ccode [:db/add cid :course/lectures lid]
         lcode [:db/add lid :lecture/course cid]]
@@ -394,6 +397,15 @@
     (show-entity-by-id cid)
     (show-entity-by-id lid)))
 
+; retract the lecture from a course
+(defn rm-course-lecture
+  "remove a lecture from a course by setting ref attr with id numeric value"
+  [cid lid]
+  (let [ccode [:db/retract cid :course/lectures lid]
+        lcode [:db/retract lid :lecture/curse cid]]
+    (d/transact conn [ccode])
+    (show-entity-by-id cid)
+    (show-entity-by-id lid)))
 
 ; create homework to be assigned
 (defn create-homework
