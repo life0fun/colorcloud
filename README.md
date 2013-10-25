@@ -85,6 +85,13 @@ We can collect all nodes in a subtree into a map, using a derive function to sto
 
 With data flow functional reactive programming, you just define spec map/vector for the source, reduce fn, and the output, you do not care where source data come from. This decouples dependency and make code usable. With data flow programming you spec your logic by behavior with pure functions, connected by queue among them, and it handles all complexity of state management with clojure STM.
 
+## data model and app model
+
+Data model defines locations where mutation states are stored. Locations are tree nodes addressable by path to it while impled as nested map and updated with updated-in.
+
+App model defines nodes that represents all components in UI. App model use tranforms to say this part of the app model can do function X, and the corresponding tranform-enable render-config to associate UI event with the tranforms. Upon event, the transform will be called, in turn send out transform deltas to app input queue and then transform the data model.
+
+
 
 ## Copyright
 
