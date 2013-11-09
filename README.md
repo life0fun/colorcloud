@@ -9,12 +9,13 @@ Dr. Mitra asked, what did the poor do wrong ? let's answer it!
 
 When starting datomic, bin/transactor will print the URI for connecting,
 datomic:free://localhost:4334/<DB-NAME>, means using free protocol. These are configured at free-transactor-template.properties.
+mainly set data and log dir and disable using ssl between peers and transactors.
 To create a connection string, simply replace DB-NAME with your db name.
 
     db-uri = "datomic:free://localhost:4334/colorcloud"
 
-    lein datomic start &       # start datomic server first
-    lein datomic initialize   # create db and load data
+    lein datomic start &      # start datomic server first
+    lein datomic initialize   # load data specified in project.clj datomic schemas.
     lein run create-schema    # create schema
     lein run list-schema      # list all attributes in db
     lein run add-family       # run 2 times to add 2 family
@@ -25,7 +26,8 @@ To create a connection string, simply replace DB-NAME with your db name.
     lein run fake-comment     # fake a comment for testing
     lein run create-course-lecture  # create a course and a list of lecture
 
-You can use repl to verify database is initialized properly. Note datomic db schema, config and db-uri are defined inside project.clj.
+
+Datomic database is persistence across restarts. To clean up databases, use `(d/delete-database uri) (d/create-database uri)`. You can use repl to verify database is initialized properly. Note datomic db schema, config and db-uri are defined inside project.clj.
 
 
     lein repl
