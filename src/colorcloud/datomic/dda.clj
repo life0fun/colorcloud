@@ -372,8 +372,8 @@
                     ] ; all lectures of the course
                 db 
                 subject)
-        cids (map first (second eids))  ; always ret the first homework to assign.
-        lids (map second (second eids))]
+        cids (map first eids)  ; always ret the first homework to assign.
+        lids (map second eids)]
     ; (prn "cids" cids)
     ; (prn "lids" lids)
     (show-entity-by-id (first cids))
