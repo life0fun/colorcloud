@@ -33,6 +33,7 @@
     "list-parent" (dda/list-parent)
     "add-family" (dda/add-family)
     "insert-child" (dda/insert-child (read-string (last args)))
+    "find-children" (dda/find-children)
     "find-parent" (dda/find-parent (second args) (last args))
     "find-by-name" (dda/find-by-name (second args))
     "timeline" (dda/timeline (read-string (second args)) (last args))

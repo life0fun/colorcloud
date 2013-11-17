@@ -165,6 +165,11 @@
     (dbschema/list-attr db attr)))
 
 
+(defn get-entity
+  "ret an datomic EntityMap from eid"
+  [eid]
+  (d/touch (d/entity db eid)))
+
 ; show entity by id
 (defn show-entity-by-id
   "show all attrs and values of the entity by id"
@@ -212,6 +217,16 @@
     (d/transact conn [newch
                       [:db/add pid :parent/child (:db/id newch)]])
     (prn pid pe ch newch)))
+
+
+; list all children, to find one entity with id, use (get-entity id)
+(defn find-children
+  "find all children who has parents"
+  []
+  (let [c (d/q '[:find ?c :where [?c :child/parent]] db)
+        entities (map (comp get-entity first) c)]
+    (map (comp show-entity-by-id first) c)
+    entities))
 
 
 ; [:db/add entity-id attribute value]
@@ -478,9 +493,18 @@
 (defn find-assignment
   "find an assignment by time, id, or anything"
   []
-  (let [assg (d/q '[:find ?e :where [?e :assignment/homework]] db)
-        assgid (ffirst assg)]
-    (show-entity-by-id assgid)))
+  (let [assg (d/q '[:find ?hwcontent ?from ?to ?start ?due 
+                    :where [?e :assignment/homework ?h]
+                           [?h :homework/content ?hwcontent]
+                           [?e :assignment/from ?p]
+                           [?p :parent/fname ?from]
+                           [?e :assignment/to ?c] 
+                           [?c :child/fname ?to] 
+                           [?e :assignment/start ?start]
+                           [?e :assignment/due ?due]
+                    ] db)]
+    (prn (str "assignments " assg))
+    (map prn assg)))
 
 
 ; make a comment on any eid
