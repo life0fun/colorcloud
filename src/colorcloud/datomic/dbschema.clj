@@ -48,6 +48,17 @@
 ; :db.unique/value - attempts to insert a duplicate value for a different entity id will fail
 ; :db.unique/identity - attr val unique to each entity and "upsert" is enabled; merge.
 
+
+; (dschema/build-parts) and (dschema/build-schema) turns all your defparts and defschemas 
+; into a nice long list of datomic schema transactions. 
+; To build specific schema, use (dschema/generate-schema group1 group2) 
+;
+
+;
+; as a restful service, everything should be json string. 
+; do not use URI. you can always URI.parse string to URI.
+;
+
 ; app partition
 (defpart app)
 
@@ -225,7 +236,9 @@
 (defn create-schema
   "create schema using datomic-schema in db connection"
   [dbconn]
-  (d/transact dbconn (build-parts d/tempid)) ;(d/tempid :db.part/db) schema attribute with id from db part.
+  ; turn all defparts macro statement into schema transaction
+  (d/transact dbconn (build-parts d/tempid))
+  ; turn all defschema macro statement into schema transaction
   (d/transact dbconn (build-schema d/tempid)))
 
 

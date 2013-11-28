@@ -45,10 +45,6 @@
 
 (declare create-homework-math)
 
-;; store database uri
-(defonce uri "datomic:free://localhost:4334/colorcloud")
-;; connect to database
-(def conn (d/connect uri))
 
 ; the global id, gened from unix epoch in milliseconds
 (def PersonId (atom (to-long (clj-time/now))))
@@ -69,7 +65,8 @@
           :parent/address addr
           :parent/gender gender
           :parent/email email
-          :parent/phone phone}]
+          :parent/phone phone
+          :parent/status :parent.status/active}]
     (prn m)
     m))
 

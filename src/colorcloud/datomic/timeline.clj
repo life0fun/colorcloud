@@ -44,17 +44,10 @@
 ;
 
 
-;; store database uri
-(defonce uri "datomic:free://localhost:4334/colorcloud")
-;; connect to database and the db
-(def conn (d/connect uri))
-(def db (d/db conn))
-
-
 ; list all transaction
 (defn all-transactions
   "list all transactions "
-  [since]
+  [db since]
   (let [alltxs (reverse (sort 
               (d/q '[:find ?e ?when 
                      :where [?e :db/txInstant ?when]] db)))]
@@ -65,7 +58,7 @@
 ; find the timeline of an attribute of 
 (defn timeline
   "list a timeline of an attribute of the entity"
-  [eid attr]
+  [db eid attr]
   (let [hist (d/history db)
         txhist (->> (d/q '[:find ?tx ?v ?op 
                            :in $ ?e ?attr
