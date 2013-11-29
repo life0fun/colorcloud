@@ -12,7 +12,7 @@ datomic:free://localhost:4334/<DB-NAME>, means using free protocol. These are co
 mainly set data and log dir and disable using ssl between peers and transactors.
 To create a connection string, simply replace DB-NAME with your db name.
 
-    db-uri = "datomic:free://localhost:4334/colorcloud"
+    db-uri = "datomic:sql://colorcloud?jdbc:mysql://localhost:3306/datomic?user=datomic&password=datomic";
 
     lein datomic start &      # start datomic server first
     lein datomic initialize   # load data specified in project.clj datomic schemas.
@@ -32,7 +32,7 @@ Datomic database is persistence across restarts. To clean up databases, use `(d/
 
     lein repl
     (require '[datomic.api :as d])
-    (def uri "datomic:free://localhost:4334/colorcloud")
+    (def uri "datomic:sql://colorcloud?jdbc:mysql://localhost:3306/datomic?user=datomic&password=datomic")
     (def conn (d/connect uri))
     (def db (d/db conn))
     (d/delete-database uri)
@@ -47,7 +47,7 @@ Datomic database is persistence across restarts. To clean up databases, use `(d/
 
 or 
     bin/shell
-    uri = "datomic:free://localhost:4334/colorcloud"
+    uri = "datomic:sql://colorcloud?jdbc:mysql://localhost:3306/datomic?user=datomic&password=datomic";
     conn = Peer.connect(uri);
     db = conn.db();
     Peer.q("[:find ?p :where [?p :parent/child]]", db); 
