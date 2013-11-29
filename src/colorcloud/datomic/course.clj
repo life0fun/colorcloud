@@ -1,5 +1,5 @@
 ;; datomic data accessor
-(ns colorcloud.datomic.dda
+(ns colorcloud.datomic.course
   (:import [java.io FileReader]
            [java.net URI]
            [java.util Map Map$Entry List ArrayList Collection Iterator HashMap])
@@ -7,19 +7,13 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.data.json :as json])
-  (:require [clj-redis.client :as redis])    ; bring in redis namespace
   (:require [clj-time.core :as clj-time :exclude [extend]]
             [clj-time.format :refer [parse unparse formatter]]
             [clj-time.coerce :refer [to-long from-long]])
   (:require [datomic.api :as d])
   (:require [colorcloud.datomic.dbschema :as dbschema]
-            [colorcloud.datomic.dbconn :as dbconn]
-            [colorcloud.datomic.family :as family]
-            [colorcloud.datomic.course :as course]
-            [colorcloud.datomic.assign :as assign]
-            [colorcloud.datomic.comment :as comment]
-            [colorcloud.datomic.timeline :as timeline]))
-  
+            [colorcloud.datomic.dbconn :as dbconn :refer :all]))
+
 ;
 ; http://blog.datomic.com/2013/05/a-whirlwind-tour-of-datomic-query_16.html
 ; query API results as a list of fact tuples. Fact tuple is a list of entity Ids.
@@ -49,10 +43,8 @@
 ; knowing entity id, query with (d/entity db eid). otherwise, [:find $t :where []]
 ; (d/entity db eid) rets the entity. entity is LAZY. attr only availabe when touch.
 ; To add data to a new entity, build a transaction using :db/add implicitly 
-; with the map structure, which will be conver to [:db/add eid att val], 
-; or explicitly with the list structure.
-; note that clj nil is an illegal value for db attribute. Need to convert it.
-;
+; with the map structure (or explicitly with the list structure), a temporary id, 
+; and the attributes and values being added.
 ;
 ; #db/id[partition-name value*] : value is an optional negative number.
 ; all instances of the same temp id are mapped to the same actual entity id in a given transaction, 
@@ -102,114 +94,37 @@
 ; (d/q '[:find ?e :in $ ?x :where [?e :child/parent ?x]] db (:db/id p))
 
 
-; create attr schema thru conn
-(defn create-schema
-  "create schema with connection to db"
-  []
-  (dbconn/create-schema))
+(declare create-lecture)
+(declare create-course-coding)
 
 
-; list all install-ed attrs in db
-(defn list-attr
-  "list attibutes in db"
-  ([]
-    (dbconn/list-attr))
-  ([attr]
-    (if attr
-      (dbconn/list-attr attr)
-      (dbconn/list-attr))))
+; for course and lectures
+(defn course-attr
+  "compose a map of attrs for a course entity"
+  [subject title overview materials contenturi]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :course/subject subject
+          :course/title title
+          :course/overview overview
+          :course/materials materials
+          :course/contenturi contenturi}]
+    (prn m)
+    m))
+
+(defn lecture-attr
+  "compose a map of attrs for a course lecture"
+  [course seqno date topic content videouri]
+  (let [m {:db/id (d/tempid :db.part/user)
+          :lecture/course course
+          :lecture/seqno seqno
+          :lecture/date date
+          :lecture/topic topic
+          :lecture/content content
+          :lecture/videouri videouri}]
+    (prn m)
+    m))
 
 
-; show entity by id
-(defn show-entity-by-id
-  "show all attrs and values of the entity by id"
-  [eid]
-  (dbconn/show-entity-by-id eid))
-
-
-;;==============================================================
-;; family related, should use multi-method to dispatch
-;;==============================================================
-(defn add-family
-  "insert two parents with two children"
-  []
-  (family/add-family))
-
-
-; :find rets entity id, find all parent's pid and name.
-(defn list-parent
-  "find all parents with all children"
-  []
-  (family/list-parent))
-
-
-; list all children, to find one entity with id, use (get-entity id)
-(defn find-children
-  "find all children who has parents"
-  []
-  (family/find-children))
-
-
-(defn insert-child
-  "insert a children to parent by parent id, pid must be num, not string"
-  [pid]  ; passed in pid is a num
-  (family/insert-child pid))
-
-
-; [:db/add entity-id attribute value]
-(defn link-parent-child
-  "link child to parent by parent id and child id"
-  [pid cid]
-  (family/link-parent-child pid cid))
-
-
-(defn find-parent
-  "find parent by child id, id could be child name or child entity id"
-  [cidstr & args]
-  (family/find-parent cidstr args))
-
-
-; find parent of a child
-(defn find-parent-by-cid
-  "find the parent of a child by its id, the passed cid is number"
-  [cid]
-  (family/find-parent-by-cid cid))
-
-
-; search all fname and lname to check whether there is a match
-(defn find-parent-by-cname
-  "find the parent of a child by its name"
-  [clname cfname]
-  (family/find-parent-by-cname clname cfname))
-
-
-; find a person by name, use set/union as sql union query.
-(defn find-by-name 
-  "find a person by either first name or last name"
-  [pname]
-  (family/find-by-name pname))
-
-
-;;==============================================================
-;; timeline related, should use multi-method to dispatch
-;;==============================================================
-; list an entity attribute's timeline
-(defn timeline
-  "list an entity's attribute's timeline "
-  [eid attr]
-  (timeline/timeline eid attr))
-
-
-; list a person's all transaction timeline
-(defn person-timeline
-  "list a person's transaction timeline"
-  [eid]
-  (timeline/person-timeline eid))
-
-
-;;==============================================================
-;; course related, should use multi-method to dispatch
-;;==============================================================
 ; create homework to be assigned
 (defn create-course
   "create a course "
@@ -217,125 +132,102 @@
     (create-course :coding))
 
   ([subject]
-    (course/create-course subject)))
+    (case subject
+      :coding (create-course-coding)
+      "default")))
 
 
 ; create course and lecture together
 (defn create-course-and-lecture
   "create a course, and a batch of lecture in one transaction"
   []
-  (course/create-course-and-lecture))
+  (let [cm (create-course)
+        cid (:db/id cm)
+        lecm (create-lecture cid)
+        lid (:db/id lecm)
+        clm (assoc cm :course/lectures [lid])]  ; for :many field, add with [lid] or lid, db will handle it.
+    (prn clm)
+    (prn lecm)
+    (submit-transact [clm lecm])))
 
 
 ; the enum must be fully qualified, :homework.subject/math
 (defn create-course-coding
   "create a simple math course and lectures"
   []
-  (course/create-course-coding))
+  (let [subject :course.subject/coding
+        title "learning datomic"
+        credit 3
+        overview (str "datomic is a database as value based on clojure, awesome !")
+        materials (str "http://docs.datomic.com/tutorial.html")
+        contenturi (URI. "http://docs.datomic.com/")
+        coursem (course-attr subject title overview materials contenturi)]
+    ;(d/transact conn [coursem])
+    coursem))
+
 
 ; create an online course
 (defn create-lecture
   "create a course lecture for certain course id"
   [cid]
-  (course/create-lecture cid))
+  (let [lectseq (str "1b")
+        lecdate (.toDate (clj-time/date-time 2013 11 25 10 20))
+        topic (str "The day of datomic")
+        content (str "The Day of Datomic project is a collection of samples and tutorials for learning Datomic")
+        videouri (URI. "https://github.com/Datomic/day-of-datomic")
+        lecturem (lecture-attr cid lectseq lecdate topic content videouri)]
+    ;(d/transact conn [lecturem])
+    lecturem)) ; tx-data is a list of write datoms
 
 
 ; find a course
 (defn find-course
   "find course by subject, ret a list of course entity"
   []
-  (course/find-course))
+  (let [subject :course.subject/coding
+        ; get a vec of [[course-id lecture-id] [] ...]
+        eids (d/q '[:find ?c ?l           ; ret both course id and lecture id
+                    :in $ ?sub 
+                    :where [?c :course/lectures ?l]    ; all courses that have lectures
+                    ] ; all lectures of the course
+                db 
+                subject)
+        cids (map first eids)  ; always ret the first homework to assign.
+        lids (map second eids)]
+    ; (prn "cids" cids)
+    ; (prn "lids" lids)
+    (show-entity-by-id (first cids))
+    (show-entity-by-id (first lids))
+    ; [ [cid lid] [cid lid]], ret course entity map
+    (map (comp get-entity first) eids)))  
 
 
 (defn find-lecture
   "find all lectures, ret a vector of lecture entities"
   []
-  (course/find-lecture))
+  (let [lids (d/q '[:find ?l :where [?l :lecture/course]] db)
+        entities (map (comp get-entity first) lids)]  ; eid is the first of result tuple
+    (map (comp show-entity-by-id first) lids)
+    entities))
 
 
 ; linking a lecture to a course, ref attr's val is numeric id value.
 (defn add-course-lecture
   "adding a lecture to a course by setting ref attr with id numeric value"
   [cid lid]
-  (course/add-course-lecture cid lid))
+  (let [ccode [:db/add cid :course/lectures lid]
+        lcode [:db/add lid :lecture/course cid]]
+    (submit-transact [ccode lcode])
+    (show-entity-by-id cid)
+    (show-entity-by-id lid)))
 
 
 ; retract the lecture from a course
 (defn rm-course-lecture
   "remove a lecture from a course by setting ref attr with id numeric value"
   [cid lid]
-  (course/rm-course-lecture cid lid))
-
-
-;;==============================================================
-;; homework assignment related, should use multi-method to dispatch
-;;==============================================================
-; create homework to be assigned
-(defn create-homework
-  "create a homework"
-  ([]
-    (create-homework :math))
-  ; homework with subject
-  ([subject]
-    (assign/create-homework subject)))
-
-
-(defn find-homework
-  "find homework by subject"
-  []
-  (assign/find-homework))
-
-
-(defn inc-homework-popularity
-  "increase homework popularity"
-  []
-  (assign/inc-homework-popularity))
-
-
-; create an assignment for any homework that 
-(defn create-assignment
-  "create an assignment from a homework to a child"
-  ([]
-    (assign/create-assignment))
-
-  ([hwid data]
-    (assign/create-assignment hwid data)))
-
-
-
-; find all assignment
-(defn find-assignment
-  "find all assignments "
-  []
-  (assign/find-assignment))
-
-
-; submit an answer to an assignment
-(defn submit-answer
-  "submit an answer to an assignment"
-  [assid authorid]
-  (assign/submit-answer assid authorid))
-
-
-; find all answers
-(defn find-answer
-  "find all answers"
-  []
-  (assign/find-answer))
-
-
-;;==============================================================
-;; comment related, should use multi-method to dispatch
-;;==============================================================
-; make a comment on any eid
-(defn fake-comment
-  "fake a comment on an assignment"
-  []
-  (comment/fake-comment))
-
-; list all comments
-(defn find-comment
-  "find a comment"
-  []
-  (comment/find-comment))
-
+  (let [ccode [:db/retract cid :course/lectures lid]
+        lcode [:db/retract lid :lecture/curse cid]]
+    (submit-transact [ccode])
+    (show-entity-by-id cid)
+    (show-entity-by-id lid)))
