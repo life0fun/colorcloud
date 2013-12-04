@@ -132,8 +132,8 @@
 ;;==============================================================
 (defn add-family
   "insert two parents with two children"
-  []
-  (family/add-family))
+  [name]
+  (family/add-family name))
 
 
 ; :find rets entity id, find all parent's pid and name.
@@ -214,10 +214,11 @@
 (defn create-course
   "create a course "
   ([]
-    (create-course :coding))
+    (create-course {:title "aa", :author "bb", :type "Math", :content "", 
+                    :url "", :email "", :comments "", :user "rich"}))
 
-  ([subject]
-    (course/create-course subject)))
+  ([details]
+    (course/create-course details)))
 
 
 ; create course and lecture together
@@ -274,10 +275,11 @@
 (defn create-homework
   "create a homework"
   ([]
-    (create-homework :math))
-  ; homework with subject
-  ([subject]
-    (assign/create-homework subject)))
+    (create-homework {:title "aa", :author "bb", :type "Math", :content "cc", 
+                      :url "dd", :difficulty "4", :comments "ff", :user "rich"}))
+
+  ([details]
+    (assign/create-homework details)))
 
 
 (defn find-homework

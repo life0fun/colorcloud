@@ -31,7 +31,7 @@
     "list-schema" (dda/list-attr (second args))
     "show-entity" (dda/show-entity-by-id (read-string (last args)))
     "list-parent" (dda/list-parent)
-    "add-family" (dda/add-family)
+    "add-family" (dda/add-family (second args))
     "insert-child" (dda/insert-child (read-string (last args)))
     "find-children" (dda/find-children)
     "find-parent" (dda/find-parent (second args) (last args))
